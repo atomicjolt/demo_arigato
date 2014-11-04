@@ -1,0 +1,102 @@
+<%= form_for(@canvas_load) do |f| %>
+  <%= render partial: 'layouts/errors', object: @canvas_load, as: :check_me %>
+  <h1 class="text-center">Canvas Demo Loader</h1>
+  <div class="container">
+
+  <hr>
+
+  <form class="form-horizontal" role="form">
+
+    <h3 class="text-info">What LTI tools do you need?</h3>
+    <p class="text-muted">LTI tools will <em>not</em> be created if they already exist in this Account.</p>
+
+    <div class="row">
+      <div class="col-sm-3">
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-12">
+          <div class="checkbox">
+            <%= f.check_box :lti_attendance, {checked: true} %>
+            <%= f.label :lti_attendance, "Roll Call Attendance" %>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="col-sm-3">
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-12">
+          <div class="checkbox">
+          <%= f.check_box :lti_chat, {checked: true} %>
+          <%= f.label :lti_chat, "Canvas Chat" %>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  
+    <hr>
+
+    <h3 class="text-info">Do you want to make demo courses for a specific human?</h3>
+    <div class="row">
+      <div class="form-group col-sm-8">
+        <%= f.label :user_id, "Teacher sisID", :class => "col-sm-3 control-label" %>
+        <div class="col-sm-6">
+         <%= f.text_field :user_id, :class => "form-control"%>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-sm-8">
+        <%= f.label :suffix, "Suffix (e.g. lastname)", :class => "col-sm-3 control-label" %>
+        <div class="col-sm-6">
+         <%= f.text_field :suffix, :class => "form-control"%>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3 class="text-info">What demo courses do you want to make?</h3>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-12">
+            <div class="checkbox">
+            <%= f.check_box :course_welcome  %>
+            <%= f.label :course_welcome, "Welcome to Canvas" %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="text-muted">Welcome to Canvas will <em>not</em> be created if it already exists in this Account.</p>
+    <hr>
+    <div class="row">
+      <div class="col-sm-9">
+        <h3 class="text-info">Available Courses</h3>
+        <%= render partial: 'canvas_loads/common_cartridge_courses', locals: { common_cartridge_courses: @common_cartridge_courses, f: f} %>
+      </div>
+    </div>
+
+    <%#
+    <fieldset>
+      <legend>What student activity do you want in the courses?</legend>
+      <p class="comment">Choosing any of these options will first create and enroll fake students into the above courses.</p>
+      <div><input disabled type="checkbox" name="doactivity[]" id="do-assignments" value="assignments" checked /><label for="do-assignments">Assignment submissions</label></div>
+      <div><input disabled type="checkbox" name="doactivity[]" id="do-introductions" value="introductions" checked /><label for="do-introductions">Discussion introductions</label></div>
+      <div><input disabled type="checkbox" name="doactivity[]" id="do-discussions" value="discussions" checked /><label for="do-discussions">Class discussions</label></div>
+      <div><input disabled type="checkbox" name="doactivity[]" id="do-conversations" value="conversations" checked /><label for="do-conversations">Random conversation msg</label></div>
+    </fieldset>
+    %>
+
+    <br/>
+    <div class="row">
+
+      <div class="col-sm-2">
+      <%= f.submit "Submit", class: "btn btn-info btn-lg btn-block" %>
+      </div>
+    </div>
+    </form>
+
+  </div>
+<% end %>
