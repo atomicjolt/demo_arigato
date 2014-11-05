@@ -5,7 +5,10 @@ This project makes it simple to populate a sample Canvas course using values fro
 
 Deployment
 -----------
+This application uses puma as a webserver. 
+Start with:
 
+rails server puma
 
 Ruby on Rails
 -------------

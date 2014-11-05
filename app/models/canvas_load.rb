@@ -3,4 +3,5 @@ class CanvasLoad < ActiveRecord::Base
   has_many :cartridge_courses
   
   accepts_nested_attributes_for :cartridge_courses, reject_if: proc { |a| a['is_selected'] != '1' }
+
 end

@@ -75,9 +75,9 @@ RSpec.describe CanvasLoadsController, :type => :controller do
     end
 
     describe "Creates a Canvas load entry" do
-      it "redirects to the canvas omniauth path" do
+      it "renders the create template" do
         post :create, {canvas_load: @params}
-        expect(response).to have_http_status(302)
+        expect(response).to have_http_status(200)
       end
       it "Adds selected catridge courses" do
         post :create, {canvas_load: @params}
@@ -85,7 +85,7 @@ RSpec.describe CanvasLoadsController, :type => :controller do
       end
       it "Doesn't add non-selected catridge courses" do
         post :create, {canvas_load: @params}
-        expect(response).to have_http_status(302)
+        expect(response).to have_http_status(200)
         expect(assigns(:canvas_load).cartridge_courses.any?{|c| c.source_id == 1040321}).to be false
       end
     end

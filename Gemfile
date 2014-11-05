@@ -32,8 +32,7 @@ gem 'google-api-client'
 # JSON parser
 gem 'yajl-ruby', require: 'yajl'
 
-gem 'unicorn'
-gem 'unicorn-rails'
+gem 'puma'
 
 # API Related
 gem 'httparty'

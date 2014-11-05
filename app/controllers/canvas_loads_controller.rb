@@ -1,7 +1,9 @@
 class CanvasLoadsController < ApplicationController
+  include ActionController::Live
+  
+  Mime::Type.register "text/event-stream", :stream
 
-  before_action :authenticate_user!
-  before_action :set_canvas_load, only: [:show, :edit, :update, :destroy]
+  before_action :set_canvas_load, only: [:show, :setup_course]
 
   def index
     @canvas_loads = current_user.canvas_loads
@@ -16,13 +18,24 @@ class CanvasLoadsController < ApplicationController
 
   def create
     @canvas_load = current_user.canvas_loads.build(canvas_load_params)
-    byebug
     @canvas_load.canvas_domain = current_user.authentications.find_by_provider('canvas').provider_url
-    if @canvas_load.save
-
-      redirect_to @canvas_load, notice: 'Canvas load was successfully created.'
+    if @canvas_load.save    
+      render :create
     else
       render :new
+    end
+  end
+
+  def setup_course
+    response.headers['Content-Type'] = 'text/event-stream'
+    begin
+      5.times do
+        response.stream.write "done\n\n".html_safe
+        sleep 1.second
+      end
+    rescue IOError # Raised when browser interrupts the connection
+    ensure
+      response.stream.close # Prevents stream from being open forever
     end
   end
 
