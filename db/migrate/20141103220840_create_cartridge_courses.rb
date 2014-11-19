@@ -9,6 +9,8 @@ class CreateCartridgeCourses < ActiveRecord::Migration
       t.integer :term_id
       t.datetime :start_at
       t.datetime :end_at
+      t.integer :canvas_course_id
+      t.integer :canvas_account_id
       t.timestamps
     end
     add_index :cartridge_courses, :canvas_load_id

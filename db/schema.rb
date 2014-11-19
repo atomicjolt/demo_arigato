@@ -72,6 +72,8 @@ ActiveRecord::Schema.define(version: 20141103220840) do
     t.integer  "term_id"
     t.datetime "start_at"
     t.datetime "end_at"
+    t.integer  "canvas_course_id"
+    t.integer  "canvas_account_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
