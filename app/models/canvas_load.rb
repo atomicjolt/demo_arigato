@@ -62,12 +62,9 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def create_course(course)
-    canvas_course = canvas.create_course({course: {
-      name: course.long_name,
-      course_code: course.short_name,
-      public_description: course.long_name,
-      sis_course_id: course.sis_id
-    }})
+    ignore = ["id", "account_id", "created_at", "updated_at"]
+    params = course.as_json.reject{|k,v| ignore.include?(k)}
+    canvas_course = canvas.create_course({course: params})
     course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
     canvas_course
   end
