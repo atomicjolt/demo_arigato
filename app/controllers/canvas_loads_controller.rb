@@ -72,10 +72,9 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Adding Courses.\n\n"
       courses = {}
       @canvas_load.cartridge_courses.each do |course|
-        response.stream.write "Adding course: #{course.short_name}.\n\n"
+        response.stream.write "Adding course: #{course.name}.\n\n"
         courses[course.id] = @canvas_load.create_course(course)
-        byebug
-        response.stream.write "Finished adding course: #{course.short_name}.\n\n"
+        response.stream.write "Finished adding course: #{course.name}.\n\n"
       end
 
       if users.present?
