@@ -7,6 +7,10 @@ RSpec.describe CanvasLoadsController, :type => :controller do
     @authentication = FactoryGirl.create(:authentication, user: @user, provider: 'canvas', provider_url: 'http://canvas.instructure.com')
     @admin = FactoryGirl.create(:user, email: Rails.application.secrets.admin_email)
     @authentication = FactoryGirl.create(:authentication, user: @admin, provider: 'google')
+
+    @canvas_load = FactoryGirl.create(:canvas_load, user: @user, sis_id: 1234, course_welcome: true, canvas_domain: @provider_url)
+    @cartridge_course = FactoryGirl.create(:cartridge_course)
+    @canvas_load.cartridge_courses << @cartridge_course
   end
 
   login_user
@@ -89,6 +93,18 @@ RSpec.describe CanvasLoadsController, :type => :controller do
         expect(assigns(:canvas_load).cartridge_courses.any?{|c| c.source_id == 1040321}).to be false
       end
     end
+
+    describe "setup_course" do
+      it "Calls the Canvas API to setup the course" do
+        expect(response.stream).to receive(:write).with("Checking sisID...")
+        get :setup_course, id: @canvas_load
+      end
+      it "Writes the results of API calls to the response" do
+        get :setup_course, id: @canvas_load
+      end
+
+    end
+
   end
 
 end

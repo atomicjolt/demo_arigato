@@ -13,7 +13,7 @@ class CanvasLoadsController < ApplicationController
   end
 
   def new
-    @canvas_load = CanvasLoad.new(cartridge_courses: common_cartridge_courses)
+    @canvas_load = CanvasLoad.new(cartridge_courses: sample_courses)
   end
 
   def create
@@ -27,14 +27,67 @@ class CanvasLoadsController < ApplicationController
   end
 
   def setup_course
+
+    subaccount_name = 'Canvas Demo Courses'
     response.headers['Content-Type'] = 'text/event-stream'
+    
     begin
-      5.times do
-        response.stream.write "done\n\n".html_safe
-        sleep 1.second
+      response.stream.write "Starting setup. This will take a few moments...\n\n"
+      if @canvas_load.sis_id.present?
+        response.stream.write "Checking sisID...\n\n"
+        if @canvas_load.check_sis_id
+          response.stream.write "Found valid user for teacher role.\n\n"
+        else
+          response.stream.write "Found no valid user for teacher role.\n\n" 
+        end
       end
-    rescue IOError # Raised when browser interrupts the connection
+
+      if accounts = @canvas_load.create_subaccount(subaccount_name)
+        response.stream.write "Added subaccount: #{subaccount_name}.\n\n"
+      else
+        response.stream.write "You don't have permissions to add subaccount: #{subaccount_name}. Courses will be added to your default account.\n\n"
+      end
+
+      if @canvas_load.course_welcome
+        response.stream.write "Checking for existing 'Welcome to Canvas' course.\n\n"
+        if @canvas_load.setup_welcome
+          response.stream.write "Preparing to create 'Welcome to Canvas' course.\n\n"
+        else
+          response.stream.write "Robot found a 'Welcome to Canvas' course -- won't create another.\n\n"
+        end
+      end
+
+      response.stream.write "Adding Users.\n\n"
+      users = {}
+      sample_users.each do |user|
+        response.stream.write "Adding user: #{user['name']}.\n\n"
+        if users['user_id'] = @canvas_load.find_or_create_user(user)
+          response.stream.write "Finished adding user: #{user['first_name']} #{user['last_name']}.\n\n"
+        else
+          response.stream.write "You don't have permissions to new users. No users will be added\n\n"
+          break
+        end
+      end
+
+      response.stream.write "Adding Courses.\n\n"
+      courses = {}
+      @canvas_load.cartridge_courses.each do |course|
+        response.stream.write "Adding course: #{course.short_name}.\n\n"
+        courses[course.id] = @canvas_load.create_course(course)
+        byebug
+        response.stream.write "Finished adding course: #{course.short_name}.\n\n"
+      end
+
+      if users.present?
+        response.stream.write "Adding Enrollments.\n\n"
+      end
+
+    rescue IOError => ex # Raised when browser interrupts the connection
+      response.stream.write "Error: #{ex}\n\n"
+    rescue Canvas::ApiError => ex
+      response.stream.write "Canvas Error: #{ex}\n\n"
     ensure
+      response.stream.write "Finished!\n\n"
       response.stream.close # Prevents stream from being open forever
     end
   end
@@ -47,13 +100,30 @@ class CanvasLoadsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def canvas_load_params
-      params.require(:canvas_load).permit(:lti_attendance, :lti_chat, :user_id, :suffix, :course_welcome, cartridge_courses_attributes: [:is_selected, :content])
+      params.require(:canvas_load).permit(:lti_attendance, :lti_chat, :user_id, :sis_id, :suffix, :course_welcome, cartridge_courses_attributes: [:is_selected, :content])
     end
 
-    def common_cartridge_courses
+    def sample_courses
       drive = GoogleDrive.new(current_user.google_refresh_token || User.admin_user.google_refresh_token)
-      courses = drive.load_spreadsheet(Rails.application.secrets.common_cartridge_courses_google_id)
+      courses = drive.load_spreadsheet(Rails.application.secrets.courses_google_id, Rails.application.secrets.courses_google_gid)
       courses.map{|c| CartridgeCourse.new(content: c) }.find_all{|c| c.is_enabled}
+    end
+
+    def sample_users
+      drive = GoogleDrive.new(current_user.google_refresh_token || User.admin_user.google_refresh_token)
+      users = drive.load_spreadsheet(Rails.application.secrets.users_google_id, Rails.application.secrets.users_google_gid)
+      # Convert csv results into user objects
+      map_array(users, ['first_name', 'last_name', 'status'])
+    end
+
+    def map_array(data, reject_fields)
+      header = data[0]
+      data[1..data.length].map do |d| 
+        header.each_with_index.inject({}) do |result, (key, index)| 
+          result[key] = d[index] unless d[index].blank? || reject_fields.include?(key)
+          result
+        end
+      end
     end
 
 end
