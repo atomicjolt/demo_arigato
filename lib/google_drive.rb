@@ -40,12 +40,14 @@ class GoogleDrive
     client
   end
 
-  def load_spreadsheet(google_id)
+  def load_spreadsheet(google_id, gid = nil)
     # Can use this to get the url where the document can be downloaded
     # result = client.execute(
     #   :api_method => drive.files.get,
     #   :parameters => { 'fileId' => google_id })
-    result = HTTParty.get("https://docs.google.com/spreadsheets/export?id=#{google_id}&exportFormat=csv")
+    url = "https://docs.google.com/spreadsheets/export?id=#{google_id}&exportFormat=csv"
+    url << "&gid=#{gid}" if gid.present?
+    result = HTTParty.get(url)
     raise "Error loading Spreadsheet from Google: #{result.body}" unless result.code == 200
     CSV.parse(result.body)
   end
