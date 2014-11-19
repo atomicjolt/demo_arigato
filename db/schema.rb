@@ -65,15 +65,18 @@ ActiveRecord::Schema.define(version: 20141103220840) do
 
   create_table "cartridge_courses", force: true do |t|
     t.integer  "canvas_load_id"
-    t.string   "category"
-    t.integer  "source_id"
-    t.string   "short_name"
-    t.string   "long_name"
-    t.integer  "sub_account"
-    t.string   "course_file"
+    t.string   "course_code"
+    t.string   "name"
+    t.string   "sis_course_id"
+    t.integer  "account_id"
+    t.integer  "term_id"
+    t.datetime "start_at"
+    t.datetime "end_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "cartridge_courses", ["canvas_load_id"], name: "index_cartridge_courses_on_canvas_load_id", using: :btree
 
   create_table "external_identifiers", force: true do |t|
     t.integer  "user_id"
