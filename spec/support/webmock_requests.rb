@@ -9,8 +9,22 @@ csv = "category,sourceid,shortname,longname,subaccount,coursefile,active\nk12-al
 RSpec.configure do |config|
   config.before(:each) do
 
+    # Google
     stub_request(:get, %r|http[s]*://docs.google.com/spreadsheets/export\?exportFormat=csv&id=.+|).
       to_return(:status => 200, :body => csv, :headers => {})
+
+    # Canvas
+    stub_request(:get, %r|http[s]*://canvas.instructure.com/api/v1/users/sis_user_id:.+/profile\?access_token=atoken|).
+      with(:headers => {'User-Agent'=>'CanvasAPI Ruby'}).
+      to_return(:status => 200, :body => "", :headers => {})
+
+    stub_request(:get, %r|http[s]*://canvas.instructure.com/api/v1/.+/accounts/self\?access_token=atoken|).
+      with(:headers => {'User-Agent'=>'CanvasAPI Ruby'}).
+      to_return(:status => 200, :body => "", :headers => {})
+
+    stub_request(:get, "http://canvas.instructure.com/api/v1//accounts/self?access_token=atoken").
+      with(:headers => {'User-Agent'=>'CanvasAPI Ruby'}).
+      to_return(:status => 200, :body => "{\"errors\":[{\"message\":\"The specified resource does not exist.\"}],\"error_report_id\":35651642}", :headers => {})
 
   end
 end
