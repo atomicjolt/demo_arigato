@@ -239,7 +239,7 @@ Devise.setup do |config|
 
   config.omniauth :canvas, Rails.application.secrets.canvas_id, Rails.application.secrets.canvas_secret, :setup => lambda{|env|
     request = Rack::Request.new(env)
-    env['omniauth.strategy'].options[:client_options].site = request.params['canvas_url'] || request.session['canvas_url'] || 'https://canvas.instructure.com'
+    env['omniauth.strategy'].options[:client_options].site = request.params['canvas_url'] || request.session['canvas_url'] || Rails.application.secrets.canvas_secret.canvas_url
   }
 
   # ==> Warden configuration
