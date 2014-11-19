@@ -12,15 +12,20 @@ class CartridgeCourse < ActiveRecord::Base
       parts = value
       @content = value.join(',')
     end
-    self.category   = parts[0]
-    self.source_id   = parts[1]
-    self.short_name  = parts[2]
-    self.long_name   = parts[3]
-    self.sub_account = parts[4]
-    self.course_file = parts[5]
-    self.is_enabled  = parts[6] == 'TRUE'
+    
+    self.course_code   = parts[0]
+    self.name          = parts[1]
+    self.sis_course_id = parts[2]
+    self.account_id    = parts[3]
+    self.term_id       = parts[4]
+    self.start_at      = parts[6]
+    self.end_at        = parts[7]
+    
+    self.is_enabled  = parts[5] == 'active'
   end
+  
   def content
     @content
   end
+
 end
