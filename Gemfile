@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 ruby '2.1.1'
-gem 'rails', '4.1.5'
+gem 'rails', '4.1.7'
 
 # Database
 gem "pg"
@@ -28,6 +28,7 @@ gem 'ims-lti', '~> 1.0.2' # IMS LTI tool consumers and providers
 gem 'pundit'
 gem 'sendgrid'
 gem 'google-api-client'
+gem 'canvas-api'
 
 # JSON parser
 gem 'yajl-ruby', require: 'yajl'
