@@ -52,7 +52,7 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def create_subaccount(name)
-    canvas.create_subaccount({name: name})
+    canvas.create_subaccount({account: {name: name}})
     rescue Canvas::ApiError => ex
       if CanvasWrapper.authorized_fail?(ex)
         nil
