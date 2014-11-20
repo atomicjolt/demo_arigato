@@ -103,12 +103,20 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return if @user # Previous filter was successful and we already have a user
       auth = request.env["omniauth.auth"]
       kind = params[:action].titleize # Should give us Facebook, Twitter, Linked In, etc
-      @user = User.new
-      @user.apply_oauth(auth)
-      @user.account_id = current_account.id
-      @user.add_account(current_account)
-      @user.skip_confirmation!
-      @user.save!
+
+      if @user = User.find_by(email: request.env["omniauth.auth"]['info']["email"])
+        @user.apply_oauth(auth)
+        @user.account_id = current_account.id
+        @user.add_account(current_account)
+        @user.save!
+      else
+        @user = User.new
+        @user.apply_oauth(auth)
+        @user.account_id = current_account.id
+        @user.add_account(current_account)
+        @user.skip_confirmation!
+        @user.save!
+      end
       check_external_identifier(@user)
       sign_in_or_register(kind)
     rescue ActiveRecord::RecordInvalid => ex
