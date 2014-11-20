@@ -1,17 +1,19 @@
-<%= form_for :canvas_authentication, url: canvas_authentications_path, html: { role: 'form' } do |f| -%>
-  <div class="form-group">
-    <label>Your Canvas Url:</label>
-    <%= text_field_tag(:canvas_url, canvas_url, { class: 'form-control' }) %>
-  </div>
-  <%= submit_tag 'Login using Canvas', { class: 'btn btn-primary' } %>
-  <span class="waiting">Connecting to Canvas. Please Wait...</span>
-<% end -%>
+<div class="well">
+  <%= form_for :canvas_authentication, url: canvas_authentications_path, html: { role: 'form' } do |f| -%>
+    <div class="form-group">
+      <label>Canvas Url:</label>
+      <%= text_field_tag(:canvas_url, canvas_url, { class: 'form-control' }) %>
+    </div>
+    <%= submit_tag 'Login using Canvas', { class: 'btn btn-primary' } %>
+    <span class="waiting">Connecting to Canvas. Please Wait...</span>
+  <% end -%>
+</div>
 
 <% if Rails.env.development? %>
-  <div class="authform">
-    <p>This form is only available in development mode. After connecting Canvas and Google using the ngrok domain you can login using this form on localhost. This will enable testing of the streaming functionality that appears while setting up a Canvas course.</p>
+  <div class="authform well">
     <%= form_for(resource, :as => resource_name, :url => session_path(resource_name), :html => { :role => 'form'}) do |f| %>
       <h3>Sign in</h3>
+      <p>This form is only available in development mode. After connecting Canvas and Google using the ngrok domain you can login using this form on localhost. This will enable testing of the streaming functionality that appears while setting up a Canvas course.</p>
       <%= devise_error_messages! %>
       <div class="form-group">
         <%= f.label :email %>
