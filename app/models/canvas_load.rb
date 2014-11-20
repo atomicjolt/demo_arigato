@@ -61,12 +61,22 @@ class CanvasLoad < ActiveRecord::Base
       end
   end
 
-  def create_course(course)
-    ignore = ["id", "account_id", "created_at", "updated_at"]
-    params = course.as_json.reject{|k,v| ignore.include?(k)}
-    canvas_course = canvas.create_course({course: params})
-    course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
-    canvas_course
+  def find_or_create_course(course)
+    if existing_course = current_courses.find{|cc| course.course_code == cc['course_code']}
+      {
+        course: existing_course,
+        existing: true
+      }
+    else
+      ignore = ["id", "account_id", "created_at", "updated_at"]
+      params = course.as_json.reject{|k,v| ignore.include?(k)}
+      canvas_course = canvas.create_course({course: params})
+      course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
+      {
+        course: canvas_course,
+        existing: false
+      }
+    end
   end
 
   def find_or_create_user(params)

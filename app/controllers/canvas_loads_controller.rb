@@ -60,9 +60,8 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Adding Users.\n\n"
       users = {}
       sample_users.each do |user|
-        response.stream.write "Adding user: #{user['name']}.\n\n"
         if users['user_id'] = @canvas_load.find_or_create_user(user)
-          response.stream.write "Finished adding user: #{user['first_name']} #{user['last_name']}.\n\n"
+          response.stream.write "Added user: #{user['first_name']} #{user['last_name']}.\n\n"
         else
           response.stream.write "You don't have permissions to new users. No users will be added\n\n"
           break
@@ -72,9 +71,12 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Adding Courses.\n\n"
       courses = {}
       @canvas_load.cartridge_courses.each do |course|
-        response.stream.write "Adding course: #{course.name}.\n\n"
-        courses[course.id] = @canvas_load.create_course(course)
-        response.stream.write "Finished adding course: #{course.name}.\n\n"
+        courses[course.id] = @canvas_load.find_or_create_course(course)
+        if courses[course.id][:existing]
+          response.stream.write "#{course.name} already exists.\n\n"
+        else
+          response.stream.write "Added course: #{course.name}.\n\n"
+        end
       end
 
       if users.present?
