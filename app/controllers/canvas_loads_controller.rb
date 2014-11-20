@@ -63,7 +63,7 @@ class CanvasLoadsController < ApplicationController
         if users['user_id'] = @canvas_load.find_or_create_user(user)
           response.stream.write "Added user: #{user['first_name']} #{user['last_name']}.\n\n"
         else
-          response.stream.write "You don't have permissions to new users. No users will be added\n\n"
+          response.stream.write "You don't have permissions to add new users. No users will be added\n\n"
           break
         end
       end
