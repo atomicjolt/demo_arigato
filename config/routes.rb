@@ -23,7 +23,5 @@ Rails.application.routes.draw do
 
   resources :users
   resources :canvas_authentications
-  
-  mount MailPreview => 'mail_view' if Rails.env.development?
 
 end
