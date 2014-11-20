@@ -114,6 +114,7 @@ class CanvasLoadsController < ApplicationController
       drive = GoogleDrive.new(current_user.google_refresh_token || User.admin_user.google_refresh_token)
       users = drive.load_spreadsheet(Rails.application.secrets.users_google_id, Rails.application.secrets.users_google_gid)
       # Convert csv results into user objects
+      users = users.reject{|u| u['status'] != 'active'}
       map_array(users, ['first_name', 'last_name', 'status'])
     end
 
