@@ -38,6 +38,10 @@ gem 'puma'
 # API Related
 gem 'httparty'
 
+# Deployment
+gem 'heroku_secrets', github: 'alexpeattie/heroku_secrets'
+gem 'rails_12factor'
+
 group :development do
   gem 'spring'
   gem 'better_errors'
