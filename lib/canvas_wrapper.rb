@@ -52,8 +52,8 @@ class CanvasWrapper
     api_get_request("accounts/#{account_id}/sub_accounts")
   end
 
-  def create_course(params)
-    api_post_request("accounts/#{account_id}/courses?enroll_me=true", params)
+  def create_course(params, sub_account_id = nil)
+    api_post_request("accounts/#{sub_account_id || account_id}/courses?enroll_me=true", params)
   end
 
   def get_courses_for_account(search_term = nil)
