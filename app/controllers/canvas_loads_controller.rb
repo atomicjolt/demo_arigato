@@ -59,7 +59,7 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
-      response.stream.write "Adding Users.\n\n"
+      response.stream.write "Adding Users -------------------------------\n\n"
       users = {}
       sample_users.each do |user|
         if users['user_id'] = @canvas_load.find_or_create_user(user)
@@ -70,7 +70,7 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
-      response.stream.write "Adding Courses.\n\n"
+      response.stream.write "Adding Courses -------------------------------\n\n"
       courses = {}
       @canvas_load.courses.each do |course|
         courses[course.id] = @canvas_load.find_or_create_course(course, sub_account_id)
@@ -82,7 +82,7 @@ class CanvasLoadsController < ApplicationController
       end
 
       if users.present?
-        response.stream.write "Adding Enrollments.\n\n"
+        response.stream.write "Adding Enrollments -------------------------------\n\n"
       end
 
     rescue IOError => ex # Raised when browser interrupts the connection
