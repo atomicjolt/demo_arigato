@@ -24,10 +24,10 @@ class CanvasLoad < ActiveRecord::Base
   def sis_profile
       @sis_profile ||= self.canvas.get_profile_by_sis_id(self.sis_id)
     end
-    
-  def setup_welcome
+
+  def setup_welcome(sub_account_id = nil)
     # Check to see if Welcome course exists already
-    if welcome_course = current_courses.find{|c| c['name'] == welcome_to_canvas_name}
+    if welcome_course = search_courses(sub_account_id, welcome_to_canvas_name).find{|c| c['name'] == welcome_to_canvas_name}
       false
     else
       self.courses.create!(content: {
@@ -41,28 +41,31 @@ class CanvasLoad < ActiveRecord::Base
     end
   end
 
-  def current_courses
-    return @current_courses if @current_courses.present?
-  
+  def search_courses(sub_account_id = nil, search_term = nil)
     if canvas.is_account_admin
-      @current_courses = canvas.get_courses_for_account(welcome_to_canvas_name)
+      found_courses = canvas.get_courses_for_account(sub_account_id, search_term)
     else
-      @current_courses = canvas.get_courses
+      found_courses = canvas.get_courses
+      # Filter courses to only the ones we have control over.
+      found_courses = found_courses.reject{|course| course['enrollments'].none?{|enrollment| ['teacher', 'designer'].include?(enrollment['type']) } }
     end
 
-    while @current_courses.more? && @current_courses.length < 500 # Just in case we don't want to loop over courses forever
-      @current_courses.next_page!
+    while found_courses.more? && found_courses.length < 500 # Just in case we don't want to loop over courses forever
+      found_courses.next_page!
     end
 
-    # Filter courses to only the ones we have control over.
-    @current_courses = @current_courses.reject{|course| course['enrollments'].none?{|enrollment| ['teacher', 'designer'].include?(enrollment['type']) } }
-
+    found_courses
   rescue Canvas::ApiError => ex
     raise Canvas::ApiError.new("Could not get current courses: #{ex}")
   end
 
-  def create_subaccount(name)
-    canvas.create_subaccount({account: {name: name}})
+  def find_or_create_sub_account(name)
+    sub_accounts = canvas.sub_accounts
+    if sub_account = sub_accounts.find{|sa| sa['name'] == name}
+      sub_account
+    else
+      canvas.create_subaccount({account: {name: name}})
+    end
     rescue Canvas::ApiError => ex
       if CanvasWrapper.authorized_fail?(ex)
         nil
@@ -72,7 +75,7 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def find_or_create_course(course, sub_account_id)
-    if existing_course = current_courses.find{|cc| course.course_code == cc['course_code']}
+    if existing_course = search_courses(sub_account_id).find{|cc| course.course_code == cc['course_code']}
       {
         course: existing_course,
         existing: true
@@ -89,27 +92,50 @@ class CanvasLoad < ActiveRecord::Base
     end
   end
 
-  def find_or_create_user(params)
-    user = canvas.get_profile_by_sis_id(params['sis_user_id'])
-    user = safe_create_user(params) unless user
-    if !user
-      # This is likely due to us using an sis_id and it being rejected. Try again without the sis id
-      params.delete('sis_user_id')
-      user = safe_create_user(params)
+  def find_or_create_user(params, sub_account_id = nil)
+    if user = canvas.get_profile_by_sis_id(params[:sis_user_id])
+      return {
+        user: user,
+        existing: true
+      }
     end
-    user
+    if user.blank?
+      user_params = {
+        user: {
+          name: params[:name],
+          short_name: params[:name]
+        }, 
+        pseudonym: {
+          unique_id: params.delete(:email),
+          password: params.delete(:password),
+          sis_user_id: params.delete(:sis_user_id)
+        }
+      }
+      user = safe_create_user(user_params, sub_account_id)
+    end
+    if user.blank?
+      # This is likely due to us using an sis_id and it being rejected. Try again without the sis id and password
+      user_params[:pseudonym].delete(:sis_user_id)
+      user_params[:pseudonym].delete(:password)
+      user = safe_create_user(user_params, sub_account_id)
+    end
+    {
+      user: user,
+      existing: false
+    }
+  end
+
+  def ensure_enrollment(user_id, course_id, enrollment_type)
+    canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: enrollment_type, enrollment_state: 'active' }})
   end
 
   protected
     
-    def safe_create_user(params)
-      canvas.create_user(params)
+    def safe_create_user(params, sub_account_id)
+      canvas.create_user(params, sub_account_id)
     rescue Canvas::ApiError => ex
-      if CanvasWrapper.server_error?(ex)
-        nil
-      else
-        raise ex
-      end
+      byebug
+      nil
     end
 
     def canvas

@@ -48,7 +48,7 @@ class CanvasWrapper
     api_post_request("accounts/#{account_id}/sub_accounts", params)
   end
 
-  def subaccounts
+  def sub_accounts
     api_get_request("accounts/#{account_id}/sub_accounts")
   end
 
@@ -56,8 +56,8 @@ class CanvasWrapper
     api_post_request("accounts/#{sub_account_id || account_id}/courses?enroll_me=true", params)
   end
 
-  def get_courses_for_account(search_term = nil)
-    url = "accounts/#{account_id}/courses?per_page=#{@per_page}&published=true"
+  def get_courses_for_account(sub_account_id = nil, search_term = nil)
+    url = "accounts/#{sub_account_id || account_id}/courses?per_page=#{@per_page}"
     url << "&search_term=#{ERB::Util.url_encode(search_term)}" if search_term.present?
     api_get_request(url)
   end
@@ -88,6 +88,10 @@ class CanvasWrapper
     api_get_request("courses/#{course_id}/users?enrollment_type=student")
   end
 
+  def enroll_user(course_id, params)
+    api_post_request("courses/#{course_id}/enrollments", params)
+  end
+
   def course_participation(course_id, student_id)
     api_get_request("courses/#{course_id}/analytics/users/#{student_id}/activity")
   end
@@ -108,8 +112,8 @@ class CanvasWrapper
     api_get_request("courses/#{course_id}/analytics/users/#{student_id}/assignments")
   end
 
-  def create_user(params)
-    api_post_request("accounts/#{account_id}/users", params)
+  def create_user(params, sub_account_id = nil)
+    api_post_request("accounts/#{sub_account_id || account_id}/users", params)
   end
 
   def get_profile(user_id)

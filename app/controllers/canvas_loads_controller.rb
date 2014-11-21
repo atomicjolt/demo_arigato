@@ -43,27 +43,34 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
-      if sub_account = @canvas_load.create_subaccount(subaccount_name)
+      if sub_account = @canvas_load.find_or_create_sub_account(subaccount_name)
+        response.stream.write "Adding Sub Account -------------------------------\n\n"
         sub_account_id = sub_account['id']
-        response.stream.write "Added subaccount: #{subaccount_name}.\n\n"
+        response.stream.write "Added sub account: #{subaccount_name}.\n\n"
       else
         response.stream.write "You don't have permissions to add subaccount: #{subaccount_name}. Courses will be added to your default account.\n\n"
       end
 
       if @canvas_load.course_welcome
         response.stream.write "Checking for existing 'Welcome to Canvas' course.\n\n"
-        if @canvas_load.setup_welcome
+        if @canvas_load.setup_welcome(sub_account_id)
           response.stream.write "Preparing to create 'Welcome to Canvas' course.\n\n"
         else
-          response.stream.write "Robot found a 'Welcome to Canvas' course -- won't create another.\n\n"
+          response.stream.write "Found a 'Welcome to Canvas' course -- won't create another.\n\n"
         end
       end
 
       response.stream.write "Adding Users -------------------------------\n\n"
       users = {}
       sample_users.each do |user|
-        if users['user_id'] = @canvas_load.find_or_create_user(user)
-          response.stream.write "Added user: #{user['first_name']} #{user['last_name']}.\n\n"
+        result = @canvas_load.find_or_create_user(user, sub_account_id)
+        if result[:user] 
+          users[user[:email]] = result[:user]
+          if result[:existing]
+            response.stream.write "Found existing user: #{user[:name]}.\n\n"
+          else
+            response.stream.write "Added user: #{user[:name]}.\n\n"
+          end
         else
           response.stream.write "You don't have permissions to add new users. No users will be added\n\n"
           break
@@ -73,8 +80,9 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Adding Courses -------------------------------\n\n"
       courses = {}
       @canvas_load.courses.each do |course|
-        courses[course.id] = @canvas_load.find_or_create_course(course, sub_account_id)
-        if courses[course.id][:existing]
+        result = @canvas_load.find_or_create_course(course, sub_account_id)
+        courses[course.course_code] = result[:course]
+        if result[:existing]
           response.stream.write "#{course.name} already exists.\n\n"
         else
           response.stream.write "Added course: #{course.name}.\n\n"
@@ -83,6 +91,12 @@ class CanvasLoadsController < ApplicationController
 
       if users.present?
         response.stream.write "Adding Enrollments -------------------------------\n\n"
+        sample_enrollments.each do |enrollment|
+          user_id = users[enrollment[:email]]
+          course_id = courses[enrollment[:course_code]]
+          @canvas_load.ensure_enrollment(user_id, course_id, enrollment[:type])
+          response.stream.write "Enrolled #{enrollment[:email]} in #{enrollment[:course_code]}\n\n"
+        end
       end
 
     rescue IOError => ex # Raised when browser interrupts the connection
@@ -113,20 +127,24 @@ class CanvasLoadsController < ApplicationController
 
     def sample_users
       users = google_drive.load_spreadsheet(Rails.application.secrets.users_google_id, Rails.application.secrets.users_google_gid)
-      # Convert csv results into user objects
       map_array(users, ['first_name', 'last_name'])
+    end
+
+    def sample_enrollments
+      enrollments = google_drive.load_spreadsheet(Rails.application.secrets.enrollments_google_id, Rails.application.secrets.enrollments_google_gid)
+      map_array(enrollments, ['first_name', 'last_name'])
     end
 
     def map_array(data, reject_fields)
       header = data[0]
       results = data[1..data.length].map do |d| 
         header.each_with_index.inject({}) do |result, (key, index)| 
-          result[key] = d[index] unless d[index].blank? || reject_fields.include?(key)
+          result[key.to_sym] = d[index] unless d[index].blank? || reject_fields.include?(key)
           result
         end
       end
-      results = results.reject{|u| u['status'] != 'active'}
-      results.each{|r| r.delete('status')}
+      results = results.reject{|u| u[:status] != 'active'}
+      results.each{|r| r.delete(:status)}
       results
     end
 
