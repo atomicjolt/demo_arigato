@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141103220840) do
+ActiveRecord::Schema.define(version: 20141120233402) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -63,22 +63,16 @@ ActiveRecord::Schema.define(version: 20141103220840) do
 
   add_index "canvas_loads", ["user_id"], name: "index_canvas_loads_on_user_id", using: :btree
 
-  create_table "cartridge_courses", force: true do |t|
+  create_table "courses", force: true do |t|
+    t.text     "content"
     t.integer  "canvas_load_id"
-    t.string   "course_code"
-    t.string   "name"
-    t.string   "sis_course_id"
-    t.integer  "account_id"
-    t.integer  "term_id"
-    t.datetime "start_at"
-    t.datetime "end_at"
     t.integer  "canvas_course_id"
     t.integer  "canvas_account_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "cartridge_courses", ["canvas_load_id"], name: "index_cartridge_courses_on_canvas_load_id", using: :btree
+  add_index "courses", ["canvas_load_id"], name: "index_courses_on_canvas_load_id", using: :btree
 
   create_table "external_identifiers", force: true do |t|
     t.integer  "user_id"

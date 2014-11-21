@@ -1,9 +1,9 @@
-<%= f.fields_for :cartridge_courses do |cc| %>
+<%= f.fields_for :courses do |cc| %>
   <div class="col-sm-4">
     <div class="checkbox">
       <%= cc.check_box :is_selected %>
       <%= cc.hidden_field :content %>
-      <%= cc.label :cartridge_courses, cc.object.name %>
+      <%= cc.label :courses, cc.object.name %>
     </div>
   </div>
 <% end %>

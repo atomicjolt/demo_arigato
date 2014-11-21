@@ -9,8 +9,8 @@ RSpec.describe CanvasLoadsController, :type => :controller do
     @authentication = FactoryGirl.create(:authentication, user: @admin, provider: 'google')
 
     @canvas_load = FactoryGirl.create(:canvas_load, user: @user, sis_id: 1234, course_welcome: true, canvas_domain: @provider_url)
-    @cartridge_course = FactoryGirl.create(:cartridge_course)
-    @canvas_load.cartridge_courses << @cartridge_course
+    @course = FactoryGirl.create(:course)
+    @canvas_load.courses << @course
   end
 
   login_user
@@ -30,7 +30,7 @@ RSpec.describe CanvasLoadsController, :type => :controller do
         "user_id"=>"213443",
         "suffix"=>"",
         "course_welcome"=>"0",
-        "cartridge_courses_attributes"=>{
+        "courses_attributes"=>{
           "0"=>{
             "is_selected"=>"1",
             "content"=>"k12-english,1076098,Language Arts 11B,Language Arts 11B,107741,K12-english-11-q3-master-export.imscc,TRUE"
@@ -85,12 +85,12 @@ RSpec.describe CanvasLoadsController, :type => :controller do
       end
       it "Adds selected catridge courses" do
         post :create, {canvas_load: @params}
-        expect(assigns(:canvas_load).cartridge_courses.any?{|c| c.source_id == 1076098}).to be true
+        expect(assigns(:canvas_load).courses.any?{|c| c.source_id == 1076098}).to be true
       end
       it "Doesn't add non-selected catridge courses" do
         post :create, {canvas_load: @params}
         expect(response).to have_http_status(200)
-        expect(assigns(:canvas_load).cartridge_courses.any?{|c| c.source_id == 1040321}).to be false
+        expect(assigns(:canvas_load).courses.any?{|c| c.source_id == 1040321}).to be false
       end
     end
 

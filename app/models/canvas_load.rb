@@ -1,10 +1,10 @@
 class CanvasLoad < ActiveRecord::Base
   belongs_to :user
-  has_many :cartridge_courses
+  has_many :courses
   
   attr_accessor :response
 
-  accepts_nested_attributes_for :cartridge_courses, reject_if: proc { |a| a['is_selected'] != '1' }
+  accepts_nested_attributes_for :courses, reject_if: proc { |a| a['is_selected'] != '1' }
 
   def welcome_to_canvas_name
     'Welcome to Canvas'
@@ -26,7 +26,13 @@ class CanvasLoad < ActiveRecord::Base
     if welcome_course = current_courses.find{|c| c['name'] == welcome_to_canvas_name}
       false
     else
-      self.cartridge_courses.create!(content: ['Welcome', nil, welcome_to_canvas_name, welcome_to_canvas_name, "", "welcome-to-canvas-export.imscc", true])
+      self.courses.create!(content: {
+        course_code: "welcome-to-canvas",
+        name: welcome_to_canvas_name,
+        sis_course_id: nil,
+        status: "active",
+        catridge: "welcome-to-canvas-export.imscc"
+      })
       true
     end
   end

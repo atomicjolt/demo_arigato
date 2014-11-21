@@ -13,7 +13,7 @@ class CanvasLoadsController < ApplicationController
   end
 
   def new
-    @canvas_load = CanvasLoad.new(cartridge_courses: sample_courses)
+    @canvas_load = CanvasLoad.new(courses: sample_courses)
   end
 
   def create
@@ -70,8 +70,8 @@ class CanvasLoadsController < ApplicationController
 
       response.stream.write "Adding Courses.\n\n"
       courses = {}
-      @canvas_load.cartridge_courses.each do |course|
-        courses[course.id] = @canvas_load.find_or_create_course(course)
+      @canvas_load.courses.each do |course|
+        courses[course.id] = @canvas_load.find_or_create_course(course, sub_account_id)
         if courses[course.id][:existing]
           response.stream.write "#{course.name} already exists.\n\n"
         else
@@ -101,7 +101,7 @@ class CanvasLoadsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def canvas_load_params
-      params.require(:canvas_load).permit(:lti_attendance, :lti_chat, :user_id, :sis_id, :suffix, :course_welcome, cartridge_courses_attributes: [:is_selected, :content])
+      params.require(:canvas_load).permit(:lti_attendance, :lti_chat, :user_id, :sis_id, :suffix, :course_welcome, courses_attributes: [:is_selected, :content])
     end
 
     def sample_courses

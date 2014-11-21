@@ -7,8 +7,8 @@ RSpec.describe CanvasLoad, :type => :model do
     @user = FactoryGirl.create(:user)
     @authentication = FactoryGirl.create(:authentication, user: @user, provider: 'canvas', provider_url: @provider_url, token: 'atoken')
     @canvas_load = FactoryGirl.create(:canvas_load, user: @user, sis_id: 1234, course_welcome: true, canvas_domain: @provider_url)
-    @cartridge_course = FactoryGirl.create(:cartridge_course)
-    @canvas_load.cartridge_courses << @cartridge_course
+    @course = FactoryGirl.create(:course)
+    @canvas_load.courses << @course
   end
 
   describe "check_sis_id" do
@@ -23,4 +23,41 @@ RSpec.describe CanvasLoad, :type => :model do
     end
   end
 
+  describe "current_courses" do
+    it "retrieves the current courses for the current user" do
+      @canvas_load.current_courses
+    end
+  end
+
+  describe "create_subaccount" do
+    context "user has permissions to create an account" do
+      it "creates a new subaccount with the given name" do
+        name = 'test'
+        @canvas_load.create_subaccount(name)
+      end
+    end
+    context "user doesn't have permission to create a sub account" do
+      it "returns nil" do
+        @canvas_load.create_subaccount('test')
+      end
+    end
+  end
+
+  describe "find_or_create_course" do
+    context "course exists" do
+      it "returns the existing course" do
+        course = FactoryGirl.create(:course)
+        @canvas_load.find_or_create_course(course)
+      end
+    end
+  end
+
+  describe "find_or_create_user" do
+    user_params = {
+      name "John Doe"
+    }
+    @canvas_load.find_or_create_user(user_params)
+  end
+
 end
+
