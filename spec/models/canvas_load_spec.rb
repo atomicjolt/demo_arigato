@@ -54,7 +54,7 @@ RSpec.describe CanvasLoad, :type => :model do
 
   describe "find_or_create_user" do
     user_params = {
-      name "John Doe"
+      name: "John Doe"
     }
     @canvas_load.find_or_create_user(user_params)
   end
