@@ -30,7 +30,8 @@ class CanvasLoadsController < ApplicationController
 
     subaccount_name = 'Canvas Demo Courses'
     response.headers['Content-Type'] = 'text/event-stream'
-    
+    sub_account_id = nil
+
     begin
       response.stream.write "Starting setup. This will take a few moments...\n\n"
       if @canvas_load.sis_id.present?
@@ -42,7 +43,8 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
-      if accounts = @canvas_load.create_subaccount(subaccount_name)
+      if sub_account = @canvas_load.create_subaccount(subaccount_name)
+        sub_account_id = sub_account['id']
         response.stream.write "Added subaccount: #{subaccount_name}.\n\n"
       else
         response.stream.write "You don't have permissions to add subaccount: #{subaccount_name}. Courses will be added to your default account.\n\n"
