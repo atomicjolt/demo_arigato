@@ -23,22 +23,22 @@ RSpec.describe CanvasLoad, :type => :model do
     end
   end
 
-  describe "current_courses" do
-    it "retrieves the current courses for the current user" do
-      @canvas_load.current_courses
+  describe "search_courses" do
+    it "retrieves courses for the current user" do
+      @canvas_load.search_courses
     end
   end
 
-  describe "create_subaccount" do
+  describe "find_or_create_sub_account" do
     context "user has permissions to create an account" do
       it "creates a new subaccount with the given name" do
         name = 'test'
-        @canvas_load.create_subaccount(name)
+        @canvas_load.find_or_create_sub_account(name)
       end
     end
     context "user doesn't have permission to create a sub account" do
       it "returns nil" do
-        @canvas_load.create_subaccount('test')
+        @canvas_load.find_or_create_sub_account('test')
       end
     end
   end
