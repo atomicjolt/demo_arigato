@@ -21,6 +21,10 @@ class CanvasLoad < ActiveRecord::Base
     end
   end
 
+  def sis_profile
+      @sis_profile ||= self.canvas.get_profile_by_sis_id(self.sis_id)
+    end
+    
   def setup_welcome
     # Check to see if Welcome course exists already
     if welcome_course = current_courses.find{|c| c['name'] == welcome_to_canvas_name}
@@ -67,16 +71,16 @@ class CanvasLoad < ActiveRecord::Base
       end
   end
 
-  def find_or_create_course(course)
+  def find_or_create_course(course, sub_account_id)
     if existing_course = current_courses.find{|cc| course.course_code == cc['course_code']}
       {
         course: existing_course,
         existing: true
       }
     else
-      ignore = ["id", "account_id", "created_at", "updated_at"]
-      params = course.as_json.reject{|k,v| ignore.include?(k)}
-      canvas_course = canvas.create_course({course: params})
+      course_params = course.parsed
+      course_params.delete(:sis_course_id)
+      canvas_course = canvas.create_course({course: course_params}, sub_account_id)
       course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
       {
         course: canvas_course,
@@ -96,24 +100,22 @@ class CanvasLoad < ActiveRecord::Base
     user
   end
 
-  def safe_create_user(params)
-    canvas.create_user(params)
-  rescue Canvas::ApiError => ex
-    if CanvasWrapper.server_error?(ex)
-      nil
-    else
-      raise ex
+  protected
+    
+    def safe_create_user(params)
+      canvas.create_user(params)
+    rescue Canvas::ApiError => ex
+      if CanvasWrapper.server_error?(ex)
+        nil
+      else
+        raise ex
+      end
     end
-  end
 
-  def canvas
-    return @canvas if @canvas.present?
-    token = self.user.authentications.find_by(provider_url: self.canvas_domain).token
-    @canvas = CanvasWrapper.new(self.canvas_domain, token)
-  end
-
-  def sis_profile
-    @sis_profile ||= self.canvas.get_profile_by_sis_id(self.sis_id)
-  end
+    def canvas
+      return @canvas if @canvas.present?
+      token = self.user.authentications.find_by(provider_url: self.canvas_domain).token
+      @canvas = CanvasWrapper.new(self.canvas_domain, token)
+    end
 
 end
