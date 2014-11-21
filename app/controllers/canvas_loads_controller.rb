@@ -105,27 +105,27 @@ class CanvasLoadsController < ApplicationController
     end
 
     def sample_courses
-      drive = GoogleDrive.new(current_user.google_refresh_token || User.admin_user.google_refresh_token)
-      courses = drive.load_spreadsheet(Rails.application.secrets.courses_google_id, Rails.application.secrets.courses_google_gid)
-      courses.map{|c| CartridgeCourse.new(content: c) }.find_all{|c| c.is_enabled}
+      courses = google_drive.load_spreadsheet(Rails.application.secrets.courses_google_id, Rails.application.secrets.courses_google_gid)
+      map_array(courses, []).map{|course| Course.new(content: course.to_json) }
     end
 
     def sample_users
-      drive = GoogleDrive.new(current_user.google_refresh_token || User.admin_user.google_refresh_token)
-      users = drive.load_spreadsheet(Rails.application.secrets.users_google_id, Rails.application.secrets.users_google_gid)
+      users = google_drive.load_spreadsheet(Rails.application.secrets.users_google_id, Rails.application.secrets.users_google_gid)
       # Convert csv results into user objects
-      users = users.reject{|u| u['status'] != 'active'}
-      map_array(users, ['first_name', 'last_name', 'status'])
+      map_array(users, ['first_name', 'last_name'])
     end
 
     def map_array(data, reject_fields)
       header = data[0]
-      data[1..data.length].map do |d| 
+      results = data[1..data.length].map do |d| 
         header.each_with_index.inject({}) do |result, (key, index)| 
           result[key] = d[index] unless d[index].blank? || reject_fields.include?(key)
           result
         end
       end
+      results = results.reject{|u| u['status'] != 'active'}
+      results.each{|r| r.delete('status')}
+      results
     end
 
 end

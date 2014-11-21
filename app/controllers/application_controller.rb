@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
 
     # **********************************************
     #
-    # OAuth related functionality:
+    # Google related functionality:
     #
     def get_google_client(user)
       if auth = user.authentications.find_by_provider('google_oauth2')
@@ -33,6 +33,18 @@ class ApplicationController < ActionController::Base
       end
     end
 
+    def google_drive
+      GoogleDrive.new(google_refresh_token)
+    end
+
+    def google_refresh_token
+      current_user.google_refresh_token || User.admin_user.google_refresh_token
+    end
+
+    # **********************************************
+    #
+    # OAuth related functionality:
+    #
     def find_consumer
       key = params[:oauth_consumer_key].strip
       Account.find_by_lti_key(key) ||
