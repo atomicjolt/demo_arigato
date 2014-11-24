@@ -131,7 +131,7 @@ class CanvasLoadsController < ApplicationController
 
     def sample_enrollments
       enrollments = google_drive.load_spreadsheet(Rails.application.secrets.enrollments_google_id, Rails.application.secrets.enrollments_google_gid)
-      map_array(enrollments, ['first_name', 'last_name'])
+      map_array(enrollments, [])
     end
 
     def map_array(data, reject_fields)
