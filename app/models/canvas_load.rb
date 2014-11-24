@@ -92,8 +92,17 @@ class CanvasLoad < ActiveRecord::Base
     end
   end
 
+  def current_users
+    return @current_users if @current_users
+    @current_users = canvas.list_users # canvas.list_users(sub_account_id)
+    while @current_users.more? && @current_users.length < 500 # Just in case we don't want to loop over users forever
+      @current_users.next_page!
+    end
+    @current_users
+  end
+
   def find_or_create_user(params, sub_account_id = nil)
-    if user = canvas.get_profile_by_sis_id(params[:sis_user_id])
+    if user = canvas.get_profile_by_sis_id(params[:sis_user_id]) || current_users.find{|u| u['login_id'] == params[:email]}
       return {
         user: user,
         existing: true
@@ -106,9 +115,9 @@ class CanvasLoad < ActiveRecord::Base
           short_name: params[:name]
         }, 
         pseudonym: {
-          unique_id: params.delete(:email),
-          password: params.delete(:password),
-          sis_user_id: params.delete(:sis_user_id)
+          unique_id: params[:email],
+          password: params[:password],
+          sis_user_id: params[:sis_user_id]
         }
       }
       user = safe_create_user(user_params, sub_account_id)
@@ -134,7 +143,6 @@ class CanvasLoad < ActiveRecord::Base
     def safe_create_user(params, sub_account_id)
       canvas.create_user(params, sub_account_id)
     rescue Canvas::ApiError => ex
-      byebug
       nil
     end
 
