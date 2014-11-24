@@ -72,8 +72,7 @@ class CanvasLoadsController < ApplicationController
             response.stream.write "Added user: #{user[:name]}.\n\n"
           end
         else
-          response.stream.write "You don't have permissions to add new users. No users will be added\n\n"
-          break
+          response.stream.write "Couldn't find or add #{user[:name]}\n\n"
         end
       end
 
