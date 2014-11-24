@@ -41,6 +41,11 @@ class CanvasLoad < ActiveRecord::Base
     end
   end
 
+  def find_course_by_course_code(sub_account_id, course_code)
+    @courses_for_course_code ||= search_courses(sub_account_id)
+    @courses_for_course_code.find{|cc| course_code == cc['course_code']}
+  end
+
   def search_courses(sub_account_id = nil, search_term = nil)
     if canvas.is_account_admin
       found_courses = canvas.get_courses_for_account(sub_account_id, search_term)
@@ -135,7 +140,7 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def ensure_enrollment(user_id, course_id, enrollment_type)
-    canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: enrollment_type, enrollment_state: 'active' }})
+    canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: "#{enrollment_type.capitalize}Enrollment", enrollment_state: 'active' }})
   end
 
   protected

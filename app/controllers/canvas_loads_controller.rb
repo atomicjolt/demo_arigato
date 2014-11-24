@@ -91,10 +91,30 @@ class CanvasLoadsController < ApplicationController
       if users.present?
         response.stream.write "Adding Enrollments -------------------------------\n\n"
         sample_enrollments.each do |enrollment|
-          user_id = users[enrollment[:email]]
-          course_id = courses[enrollment[:course_code]]
-          @canvas_load.ensure_enrollment(user_id, course_id, enrollment[:type])
-          response.stream.write "Enrolled #{enrollment[:email]} in #{enrollment[:course_code]}\n\n"
+
+          if user = users[enrollment[:email]]
+             
+            course = courses[enrollment[:course_code]]
+            
+            if !course
+              if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:course_code])
+                courses[enrollment[:course_code]] = course
+              end
+            end
+
+            if course
+              begin
+                @canvas_load.ensure_enrollment(user['id'], course['id'], enrollment[:type])
+                response.stream.write "Enrolled #{enrollment[:name]} (#{enrollment[:email]}) in #{enrollment[:course_code]}\n\n"
+              rescue Canvas::ApiError => ex
+                response.stream.write "Error #{enrollment[:name]} (#{enrollment[:email]}) in #{enrollment[:course_code]}: #{ex}\n\n"
+              end
+            else
+              response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:course_code]} not available.\n\n"
+            end
+          else
+            response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:course_code]}\n\n"
+          end
         end
       end
 
