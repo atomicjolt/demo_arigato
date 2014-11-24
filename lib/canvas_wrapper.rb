@@ -76,8 +76,8 @@ class CanvasWrapper
     api_get_request(request)
   end
 
-  def list_users
-    api_get_request("accounts/#{account_id}/users")
+  def list_users(sub_account_id = nil)
+    api_get_request("accounts/#{sub_account_id || account_id}/users")
   end
 
   def recent_logins(course_id)
