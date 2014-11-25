@@ -78,9 +78,11 @@ class CanvasLoadsController < ApplicationController
 
       response.stream.write "Adding Courses -------------------------------\n\n"
       courses = {}
+      migrations = {}
       @canvas_load.courses.each do |course|
         result = @canvas_load.find_or_create_course(course, sub_account_id)
         courses[course.course_code] = result[:course]
+        migrations[course.course_code] = result[:migration] if result[:migration]
         if result[:existing]
           response.stream.write "#{course.name} already exists.\n\n"
         else
@@ -116,6 +118,30 @@ class CanvasLoadsController < ApplicationController
             response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:course_code]}\n\n"
           end
         end
+      end
+
+      completed_courses = {}
+      while completed_courses.keys.length < migrations.keys.length
+        migrations.each do |course_code, migration|
+          if completed_courses[course_code].blank?
+            progress = @canvas_load.check_progress(migration)
+            case progress['workflow_state']
+            when 'queued'
+              response.stream.write "#{course_code} is queued.\n\n"
+            when 'running'
+              response.stream.write "#{course_code} is #{progress['completion'] * 100}% complete. #{progress['message']}\n\n"
+            when 'completed'
+              completed_courses[course_code] = true
+              response.stream.write "#{course_code} is ready.\n\n"
+            when 'failed'
+              completed_courses[course_code] = true
+              response.stream.write "Failed to add content to #{course_code}.\n\n"
+            else
+              response.stream.write "#{course_code} entered an unknown state.\n\n"
+            end
+          end
+        end
+        sleep(3)
       end
 
     rescue IOError => ex # Raised when browser interrupts the connection

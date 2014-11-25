@@ -91,7 +91,7 @@ class CanvasLoad < ActiveRecord::Base
       canvas_course = canvas.create_course({course: course_params}, sub_account_id)
       course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
       
-      canvas.migrate_content(canvas_course['id'], {
+      migration = canvas.migrate_content(canvas_course['id'], {
         migration_type: 'common_cartridge_importer',
         settings: {
           file_url: course.cartridge
@@ -100,6 +100,7 @@ class CanvasLoad < ActiveRecord::Base
 
       {
         course: canvas_course,
+        migration: migration,
         existing: false
       }
     end
@@ -149,6 +150,11 @@ class CanvasLoad < ActiveRecord::Base
 
   def ensure_enrollment(user_id, course_id, enrollment_type)
     canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: "#{enrollment_type.capitalize}Enrollment", enrollment_state: 'active' }})
+  end
+
+  def check_progress(migration)
+    progress_id = migration['progress_url'].split('/').last
+    canvas.get_progress(progress_id)
   end
 
   protected
