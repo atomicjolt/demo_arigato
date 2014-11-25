@@ -56,6 +56,10 @@ class CanvasWrapper
     api_post_request("accounts/#{sub_account_id || account_id}/courses?enroll_me=true", params)
   end
 
+  def migrate_content(course_id, params)
+    api_post_request("courses/#{course_id}/content_migrations", params)
+  end
+
   def get_courses_for_account(sub_account_id = nil, search_term = nil)
     url = "accounts/#{sub_account_id || account_id}/courses?per_page=#{@per_page}"
     url << "&search_term=#{ERB::Util.url_encode(search_term)}" if search_term.present?

@@ -35,8 +35,8 @@ class CanvasLoad < ActiveRecord::Base
         name: welcome_to_canvas_name,
         sis_course_id: nil,
         status: "active",
-        catridge: "welcome-to-canvas-export.imscc"
-      })
+        cartridge: "https://s3.amazonaws.com/SSL_Assets/sales/demo_courses/2015/welcome-to-canvas-export.imscc"
+      }.to_json)
       true
     end
   end
@@ -90,6 +90,14 @@ class CanvasLoad < ActiveRecord::Base
       course_params.delete(:sis_course_id)
       canvas_course = canvas.create_course({course: course_params}, sub_account_id)
       course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
+      
+      canvas.migrate_content(canvas_course['id'], {
+        migration_type: 'common_cartridge_importer',
+        settings: {
+          file_url: course.cartridge
+        }
+      })
+
       {
         course: canvas_course,
         existing: false
