@@ -10,6 +10,9 @@ Start with:
 
 rails server puma
 
+Upload settings to heroku:
+rake heroku:secrets RAILS_ENV=production
+
 Ruby on Rails
 -------------
 
