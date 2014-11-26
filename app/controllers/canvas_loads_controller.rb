@@ -129,7 +129,7 @@ class CanvasLoadsController < ApplicationController
             when 'queued'
               response.stream.write "#{course_code} is queued.\n\n"
             when 'running'
-              response.stream.write "#{course_code} is #{progress['completion'] * 100}% complete. #{progress['message']}\n\n"
+              response.stream.write "#{course_code} is #{progress['completion']}% complete. #{progress['message']}\n\n"
             when 'completed'
               completed_courses[course_code] = true
               response.stream.write "#{course_code} is ready.\n\n"
