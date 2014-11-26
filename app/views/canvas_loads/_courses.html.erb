@@ -1,9 +1,11 @@
 <%= f.fields_for :courses do |cc| %>
   <div class="col-sm-4">
     <div class="checkbox">
-      <%= cc.check_box :is_selected %>
-      <%= cc.hidden_field :content %>
-      <%= cc.label :courses, cc.object.name %>
+      <%= cc.label :is_selected do %>
+        <%= cc.check_box :is_selected %>
+        <%= cc.object.name %>
+        <%= cc.hidden_field :content %>
+      <% end -%>
     </div>
   </div>
 <% end %>
