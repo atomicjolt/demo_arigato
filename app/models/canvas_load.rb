@@ -87,9 +87,20 @@ class CanvasLoad < ActiveRecord::Base
       }
     else
       course_params = course.parsed
-      course_params.delete(:sis_course_id)
-      canvas_course = canvas.create_course({course: course_params}, sub_account_id)
       course_params[:name] << " - #{self.suffix}" # Add suffix to course name
+      begin
+        # try creating the course with the sis id
+        canvas_course = canvas.create_course({course: course_params}, sub_account_id)
+      rescue Canvas::ApiError => ex
+        if CanvasWrapper.sis_taken_error?(ex)
+          # If we get an error try it without the sis id
+          course_params.delete(:sis_course_id)
+          canvas_course = canvas.create_course({course: course_params}, sub_account_id)
+        else
+          raise ex
+        end
+      end
+
       course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
       
       migration = canvas.migrate_content(canvas_course['id'], {
