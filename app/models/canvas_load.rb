@@ -79,6 +79,7 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def find_or_create_course(course, sub_account_id)
+
     if existing_course = search_courses(sub_account_id).find{|cc| course.course_code == cc['course_code']}
       {
         course: existing_course,
@@ -88,6 +89,7 @@ class CanvasLoad < ActiveRecord::Base
       course_params = course.parsed
       course_params.delete(:sis_course_id)
       canvas_course = canvas.create_course({course: course_params}, sub_account_id)
+      course_params[:name] << " - #{self.suffix}" # Add suffix to course name
       course.update_attributes!(canvas_course_id: canvas_course['id'], canvas_account_id: canvas_course['account_id'])
       
       migration = canvas.migrate_content(canvas_course['id'], {
