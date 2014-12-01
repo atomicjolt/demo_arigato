@@ -31,12 +31,13 @@ class CanvasLoadsController < ApplicationController
     subaccount_name = 'Canvas Demo Courses'
     response.headers['Content-Type'] = 'text/event-stream'
     sub_account_id = nil
+    valid_teacher = false
 
     begin
       response.stream.write "Starting setup. This will take a few moments...\n\n"
       if @canvas_load.sis_id.present?
         response.stream.write "Checking sisID...\n\n"
-        if @canvas_load.check_sis_id
+        if valid_teacher = @canvas_load.check_sis_id
           response.stream.write "Found valid user for teacher role.\n\n"
         else
           response.stream.write "Found no valid user for teacher role.\n\n" 
@@ -92,6 +93,14 @@ class CanvasLoadsController < ApplicationController
 
       if users.present?
         response.stream.write "Adding Enrollments -------------------------------\n\n"
+        
+        if valid_teacher
+          courses.each do |course_code, course|
+            @canvas_load.ensure_enrollment(valid_teacher['id'], course['id'], 'teacher')
+            response.stream.write "Enrolled #{valid_teacher[:name]} in #{course_code}\n\n"
+          end
+        end
+
         sample_enrollments.each do |enrollment|
 
           if user = users[enrollment[:email]]
