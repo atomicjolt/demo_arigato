@@ -12,7 +12,6 @@ class CanvasLoad < ActiveRecord::Base
 
   def check_sis_id
     sis_profile
-    true
   rescue Canvas::ApiError => ex
     if CanvasWrapper.no_exist_fail?(ex)
       false
