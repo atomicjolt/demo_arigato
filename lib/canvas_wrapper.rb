@@ -175,4 +175,8 @@ class CanvasWrapper
     ex.message == "[{\"message\"=>\"An error occurred.\", \"error_code\"=>\"internal_server_error\"}]"
   end
 
+  def self.sis_taken_error?(ex)
+    ex.message.include?("sis_source_id") && ex.message.include?("is already in use")
+  end
+
 end
