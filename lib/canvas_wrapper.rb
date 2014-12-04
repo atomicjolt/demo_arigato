@@ -163,6 +163,22 @@ class CanvasWrapper
     })
   end
 
+  def get_account_lti_tools(sub_account_id = nil)
+    api_get_request("accounts/#{sub_account_id || account_id}/external_tools")
+  end
+
+  def get_course_lti_tools(course_id)
+    api_get_request("courses/#{course_id}/external_tools")
+  end
+
+  def create_account_lti_tool(params, sub_account_id = nil)
+    api_post_request("accounts/#{sub_account_id || account_id}/external_tools", params)
+  end
+
+  def create_course_lti_tool(params, course_id)
+    api_post_request("courses/#{course_id}/external_tools", params)
+  end
+
   def self.authorized_fail?(ex)
     ex.message == "[{\"message\"=>\"user not authorized to perform that action\"}]"
   end

@@ -129,6 +129,26 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
+      # Setup LTI tools
+      courses.each do |course_code, course|
+        if @canvas_load.lti_attendance
+          params = @canvas_load.lti_tool_params(
+            Rails.application.secrets.lti_attendance_key, 
+            Rails.application.secrets.lti_attendance_secret, 
+            'https://rollcall.instructure.com/configure.xml')
+          tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
+          response.stream.write "Added Attendance LTI tool to #{course_code}\n\n"
+        end
+        if @canvas_load.lti_chat
+          params = @canvas_load.lti_tool_params(
+            Rails.application.secrets.lti_chat_key,
+            Rails.application.secrets.lti_chat_secret, 
+            'https://chat.instructure.com/lti/configure.xml')
+          tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
+          response.stream.write "Added Chat LTI tool to #{course_code}\n\n"
+        end
+      end
+
       completed_courses = {}
       while completed_courses.keys.length < migrations.keys.length
         migrations.each do |course_code, migration|

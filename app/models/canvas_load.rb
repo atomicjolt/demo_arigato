@@ -169,6 +169,48 @@ class CanvasLoad < ActiveRecord::Base
     canvas.get_progress(progress_id)
   end
 
+  def existing_tools(course_id, sub_account_id = nil)
+    if sub_account_id
+      @lti_tools ||= canvas.get_account_lti_tools(sub_account_id)
+    else
+      canvas.get_course_lti_tools(course_id)
+    end
+  end
+
+  def lti_tool_params(key, secret, config_url)
+    {
+      name: key,
+      domain: 'instructure.com',
+      config_type: 'url',
+      privacy_level: 'public',
+      config_url: config_url,
+      consumer_key: key,
+      shared_secret: secret
+    }
+  end
+
+  def create_lti_tool(params, course_id, sub_account_id = nil)
+    if sub_account_id
+      canvas.create_account_lti_tool(params, sub_account_id)
+    else
+      canvas.create_account_lti_tool(params, course_id)
+    end
+  end
+
+  def add_lti_tool(params, course_id, sub_account_id = nil)
+    tools = existing_tools(course_id, sub_account_id)
+    if tool = tools.find{|t| t['name'] == params[:name]}
+      existing = true
+    else
+      existing = false
+      tool = create_lti_tool(params, course_id, sub_account_id)
+    end
+    {
+      existing: existing,
+      tool: tool
+    }
+  end
+
   protected
     
     def safe_create_user(params, sub_account_id)
