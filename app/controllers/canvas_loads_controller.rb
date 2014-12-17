@@ -107,7 +107,11 @@ class CanvasLoadsController < ApplicationController
              
             course = courses[enrollment[:course_code]]
             
-            if !course
+            # For now just set this to false. Later if we want to add an option to the UI we can allow
+            # users to be enrolled in existing courses not just the courses that were added in this iteration.
+            enroll_in_existing_courses = false
+
+            if !course && enroll_in_existing_courses
               if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:course_code])
                 courses[enrollment[:course_code]] = course
               end
@@ -121,7 +125,9 @@ class CanvasLoadsController < ApplicationController
                 response.stream.write "Error #{enrollment[:name]} (#{enrollment[:email]}) in #{enrollment[:course_code]}: #{ex}\n\n"
               end
             else
-              response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:course_code]} not available.\n\n"
+              if enroll_in_existing_courses
+                response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:course_code]} not available.\n\n"
+              end
             end
           else
             response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:course_code]}\n\n"
