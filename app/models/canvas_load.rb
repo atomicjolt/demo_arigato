@@ -78,9 +78,9 @@ class CanvasLoad < ActiveRecord::Base
       end
   end
 
-  def find_or_create_course(course, sub_account_id)
+  def find_or_create_course(course, sub_account_id, always_create_courses = false)
 
-    if existing_course = search_courses(sub_account_id).find{|cc| course.course_code == cc['course_code']}
+    if !always_create_courses && existing_course = search_courses(sub_account_id).find{|cc| course.course_code == cc['course_code']}
       {
         course: existing_course,
         existing: true

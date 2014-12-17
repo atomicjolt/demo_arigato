@@ -33,6 +33,13 @@ class CanvasLoadsController < ApplicationController
     sub_account_id = nil
     valid_teacher = false
 
+    # For now just set this to false. Later if we want to add an option to the UI we can allow
+    # users to be enrolled in existing courses not just the courses that were added in this iteration.
+    enroll_in_existing_courses = false
+
+    # We can update existing courses if we want to add an option to the UI. For now just create new ones. 
+    always_create_courses = true
+
     begin
       response.stream.write "Starting setup. This will take a few moments...\n\n"
       if @canvas_load.sis_id.present?
@@ -81,7 +88,7 @@ class CanvasLoadsController < ApplicationController
       courses = {}
       migrations = {}
       @canvas_load.courses.each do |course|
-        result = @canvas_load.find_or_create_course(course, sub_account_id)
+        result = @canvas_load.find_or_create_course(course, sub_account_id, always_create_courses)
         courses[course.course_code] = result[:course]
         migrations[course.course_code] = result[:migration] if result[:migration]
         if result[:existing]
@@ -107,10 +114,6 @@ class CanvasLoadsController < ApplicationController
              
             course = courses[enrollment[:course_code]]
             
-            # For now just set this to false. Later if we want to add an option to the UI we can allow
-            # users to be enrolled in existing courses not just the courses that were added in this iteration.
-            enroll_in_existing_courses = false
-
             if !course && enroll_in_existing_courses
               if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:course_code])
                 courses[enrollment[:course_code]] = course
