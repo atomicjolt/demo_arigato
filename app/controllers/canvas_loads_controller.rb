@@ -170,7 +170,8 @@ class CanvasLoadsController < ApplicationController
               response.stream.write "#{course_code} is #{progress['completion']}% complete. #{progress['message']}\n\n"
             when 'completed'
               completed_courses[course_code] = true
-              response.stream.write "#{course_code} is ready.\n\n"
+              response.stream.write "#{course_code} is ready\n\n"
+              response.stream.write %Q{Course url: #{@canvas_load.canvas_domain}/courses/#{courses[course_code]['id']}\n\n}
             when 'failed'
               completed_courses[course_code] = true
               response.stream.write "Failed to add content to #{course_code}.\n\n"
