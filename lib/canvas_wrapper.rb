@@ -32,6 +32,10 @@ class CanvasWrapper
     @canvas_api.get(full_url(api_url))
   end
 
+  def api_put_request(api_url, payload)
+    @canvas_api.put(full_url(api_url), payload)
+  end
+
   def current_account
     api_get_request("accounts/self")
   end
@@ -122,6 +126,10 @@ class CanvasWrapper
 
   def create_user(params, sub_account_id = nil)
     api_post_request("accounts/#{sub_account_id || account_id}/users", params)
+  end
+
+  def update_user(user_id, params, sub_account_id = nil)
+    api_put_request("accounts/#{sub_account_id || account_id}/users/#{user_id}", params)
   end
 
   def get_profile(user_id)
