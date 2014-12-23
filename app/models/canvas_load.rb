@@ -136,7 +136,7 @@ class CanvasLoad < ActiveRecord::Base
     }
 
     if user = canvas.get_profile_by_sis_id(params[:sis_user_id]) || current_users.find{|u| u['login_id'] == params[:email]}
-      #user = canvas.update_user(user['id'], user_params, sub_account_id)
+      add_avatar(user, params)
       return {
         user: user,
         existing: true
@@ -158,6 +158,8 @@ class CanvasLoad < ActiveRecord::Base
       user_params.delete("pseudonym[password]")
       user = safe_create_user(user_params, sub_account_id)
     end
+    
+    add_avatar(user, params)
     
     {
       user: user,
@@ -219,6 +221,10 @@ class CanvasLoad < ActiveRecord::Base
 
   protected
     
+    def add_avatar(user, params)
+      canvas.update_user(user['id'], { "user[avatar][url]" => params[:avatar] })
+    end
+
     def safe_create_user(params, sub_account_id)
       canvas.create_user(params, sub_account_id)
     rescue Canvas::ApiError => ex

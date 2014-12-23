@@ -1,8 +1,14 @@
 class CanvasWrapper
 
+  include HTTParty
+
   attr_accessor :account_id, :is_account_admin
 
   def initialize(canvas_uri, canvas_api_key)
+
+    @canvas_uri = canvas_uri
+    @canvas_api_key = canvas_api_key
+
     @canvas_api = Canvas::API.new(host: canvas_uri, token: canvas_api_key)
     @per_page = 100
     self.is_account_admin = false
@@ -20,8 +26,19 @@ class CanvasWrapper
     end
   end
 
+  def headers
+    {
+      "Authorization" => "Bearer #{@canvas_api_key}",
+      "content_type" => "json"
+    }
+  end
+
   def full_url(api_url)
     "/api/v1/#{api_url}"
+  end
+
+  def full_url_with_domain(api_url)
+    "#{@canvas_uri}/api/v1/#{api_url}"
   end
 
   def api_post_request(api_url, payload)
@@ -128,8 +145,11 @@ class CanvasWrapper
     api_post_request("accounts/#{sub_account_id || account_id}/users", params)
   end
 
-  def update_user(user_id, params, sub_account_id = nil)
-    api_put_request("accounts/#{sub_account_id || account_id}/users/#{user_id}", params)
+  def update_user(user_id, params)
+    # The canvas-api gem refuses to work with the parameters needed to update a user.
+    # Use Httparty instead. Eventually transition all the code back to using Httparty instead of the canvas gem
+    HTTParty.put(full_url_with_domain("users/#{user_id}"), :headers => headers, :body => params)
+    #api_put_request("users/#{user_id}", params)
   end
 
   def get_profile(user_id)
