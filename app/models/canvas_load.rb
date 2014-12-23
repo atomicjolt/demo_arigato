@@ -128,36 +128,42 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def find_or_create_user(params, sub_account_id = nil)
+
+    user_params = {
+      "user[name]" => params[:name],
+      "user[short_name]" => params[:name],
+      "user[avatar][url]" => params[:avatar]
+    }
+
     if user = canvas.get_profile_by_sis_id(params[:sis_user_id]) || current_users.find{|u| u['login_id'] == params[:email]}
+      #user = canvas.update_user(user['id'], user_params, sub_account_id)
       return {
         user: user,
         existing: true
       }
     end
+
+    user_params["pseudonym[unique_id]"] = params[:email]
+    user_params["pseudonym[password]"] = params[:password]
+    user_params["pseudonym[sis_user_id]"] = "#{params[:sis_user_id]}_#{DateTime.now.to_i}"
+    
+
     if user.blank?
-      user_params = {
-        user: {
-          name: params[:name],
-          short_name: params[:name]
-        }, 
-        pseudonym: {
-          unique_id: params[:email],
-          password: params[:password],
-          sis_user_id: params[:sis_user_id]
-        }
-      }
       user = safe_create_user(user_params, sub_account_id)
     end
+    
     if user.blank?
       # This is likely due to us using an sis_id and it being rejected. Try again without the sis id and password
-      user_params[:pseudonym].delete(:sis_user_id)
-      user_params[:pseudonym].delete(:password)
+      user_params.delete("pseudonym[sis_user_id]")
+      user_params.delete("pseudonym[password]")
       user = safe_create_user(user_params, sub_account_id)
     end
+    
     {
       user: user,
       existing: false
     }
+
   end
 
   def ensure_enrollment(user_id, course_id, enrollment_type)
