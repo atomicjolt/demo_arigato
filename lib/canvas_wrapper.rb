@@ -50,7 +50,9 @@ class CanvasWrapper
   end
 
   def api_put_request(api_url, payload)
-    @canvas_api.put(full_url(api_url), payload)
+    # The Canvas api gem fails on every put request. (Canvas returns a 100). Use HTTParty directly
+    # @canvas_api.put(full_url(api_url), payload)
+    HTTParty.put(full_url_with_domain(api_url), :headers => headers, :body => payload)
   end
 
   def current_account
@@ -75,6 +77,10 @@ class CanvasWrapper
 
   def create_course(params, sub_account_id = nil)
     api_post_request("accounts/#{sub_account_id || account_id}/courses?enroll_me=true", params)
+  end
+
+  def update_course(params, course_id = nil)
+    api_put_request("courses/#{course_id}", params)
   end
 
   def migrate_content(course_id, params)
