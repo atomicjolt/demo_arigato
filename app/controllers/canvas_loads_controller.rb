@@ -52,9 +52,13 @@ class CanvasLoadsController < ApplicationController
       end
 
       if sub_account = @canvas_load.find_or_create_sub_account(subaccount_name)
-        response.stream.write "Adding Sub Account -------------------------------\n\n"
-        sub_account_id = sub_account['id']
-        response.stream.write "Added sub account: #{subaccount_name}.\n\n"
+        if sub_account['existing']
+          response.stream.write "Found Existing Sub Account #{subaccount_name}-------------------------------\n\n"
+        else
+          response.stream.write "Adding Sub Account -------------------------------\n\n"
+          sub_account_id = sub_account['id']
+          response.stream.write "Added sub account: #{subaccount_name}.\n\n"
+        end
       else
         response.stream.write "You don't have permissions to add subaccount: #{subaccount_name}. Courses will be added to your default account.\n\n"
       end
@@ -89,8 +93,8 @@ class CanvasLoadsController < ApplicationController
       migrations = {}
       @canvas_load.courses.each do |course|
         result = @canvas_load.find_or_create_course(course, sub_account_id, always_create_courses)
-        courses[course.course_code] = result[:course]
-        migrations[course.course_code] = result[:migration] if result[:migration]
+        courses[course.sis_course_id] = result[:course]
+        migrations[course.sis_course_id] = result[:migration] if result[:migration]
         if result[:existing]
           response.stream.write "#{course.name} already exists.\n\n"
         else
@@ -102,51 +106,63 @@ class CanvasLoadsController < ApplicationController
         response.stream.write "Adding Enrollments -------------------------------\n\n"
         
         if valid_teacher
-          courses.each do |course_code, course|
+          courses.each do |sis_course_id, course|
             @canvas_load.ensure_enrollment(valid_teacher['id'], course['id'], 'teacher')
-            response.stream.write "Enrolled #{valid_teacher[:name]} in #{course_code}\n\n"
+            response.stream.write "Enrolled #{valid_teacher[:name]} in #{course['course_code']}\n\n"
           end
         end
 
-        sample_enrollments.each do |enrollment|
+        samples('enrollments').each do |enrollment|
 
           if user = users[enrollment[:email]]
              
-            course = courses[enrollment[:course_code]]
-            
+            course = courses[enrollment[:sis_course_id]]
+
             if !course && enroll_in_existing_courses
-              if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:course_code])
-                courses[enrollment[:course_code]] = course
+              if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:sis_course_id])
+                courses[enrollment[:sis_course_id]] = course
               end
             end
 
             if course
+              course_code = course['course_code']
               begin
                 @canvas_load.ensure_enrollment(user['id'], course['id'], enrollment[:type])
-                response.stream.write "Enrolled #{enrollment[:name]} (#{enrollment[:email]}) in #{enrollment[:course_code]}\n\n"
+                response.stream.write "Enrolled #{enrollment[:name]} (#{enrollment[:email]}) in #{course_code}\n\n"
               rescue Canvas::ApiError => ex
-                response.stream.write "Error #{enrollment[:name]} (#{enrollment[:email]}) in #{enrollment[:course_code]}: #{ex}\n\n"
+                response.stream.write "Error #{enrollment[:name]} (#{enrollment[:email]}) in #{course_code}: #{ex}\n\n"
               end
             else
               if enroll_in_existing_courses
-                response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:course_code]} not available.\n\n"
+                response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:sis_course_id]} not available.\n\n"
               end
             end
           else
-            response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:course_code]}\n\n"
+            response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:sis_course_id]}\n\n"
           end
         end
       end
 
+      # if users.present?
+      #   ['discussion', 'assignment', 'quiz', 'conversation', 'other_activity'].each do |item|
+      #     response.stream.write "Adding #{item} -------------------------------\n\n"
+      #     samples(item).each do |entry|
+      #       @canvas_load.
+      #       entry
+
+      #     end
+      #   end
+      # end
+      
       # Setup LTI tools
-      courses.each do |course_code, course|
+      courses.each do |sis_course_id, course|
         if @canvas_load.lti_attendance
           params = @canvas_load.lti_tool_params(
             Rails.application.secrets.lti_attendance_key, 
             Rails.application.secrets.lti_attendance_secret, 
             'https://rollcall.instructure.com/configure.xml')
           tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
-          response.stream.write "Added Attendance LTI tool to #{course_code}\n\n"
+          response.stream.write "Added Attendance LTI tool to #{course['course_code']}\n\n"
         end
         if @canvas_load.lti_chat
           params = @canvas_load.lti_tool_params(
@@ -154,14 +170,15 @@ class CanvasLoadsController < ApplicationController
             Rails.application.secrets.lti_chat_secret, 
             'https://chat.instructure.com/lti/configure.xml')
           tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
-          response.stream.write "Added Chat LTI tool to #{course_code}\n\n"
+          response.stream.write "Added Chat LTI tool to #{course['course_code']}\n\n"
         end
       end
 
       completed_courses = {}
       while completed_courses.keys.length < migrations.keys.length
-        migrations.each do |course_code, migration|
-          if completed_courses[course_code].blank?
+        migrations.each do |sis_course_id, migration|
+          if completed_courses[sis_course_id].blank?
+            course_code = courses[sis_course_id]['course_code']
             progress = @canvas_load.check_progress(migration)
             case progress['workflow_state']
             when 'queued'
@@ -169,11 +186,11 @@ class CanvasLoadsController < ApplicationController
             when 'running'
               response.stream.write "#{course_code} is #{progress['completion']}% complete. #{progress['message']}\n\n"
             when 'completed'
-              completed_courses[course_code] = true
+              completed_courses[sis_course_id] = true
               response.stream.write "#{course_code} is ready\n\n"
-              response.stream.write %Q{Course url: #{@canvas_load.canvas_domain}/courses/#{courses[course_code]['id']}\n\n}
+              response.stream.write %Q{Course url: #{@canvas_load.canvas_domain}/courses/#{courses[sis_course_id]['id']}\n\n}
             when 'failed'
-              completed_courses[course_code] = true
+              completed_courses[sis_course_id] = true
               response.stream.write "Failed to add content to #{course_code}.\n\n"
             else
               response.stream.write "#{course_code} entered an unknown state.\n\n"
@@ -214,9 +231,9 @@ class CanvasLoadsController < ApplicationController
       map_array(users, ['first_name', 'last_name'])
     end
 
-    def sample_enrollments
-      enrollments = google_drive.load_spreadsheet(Rails.application.secrets.enrollments_google_id, Rails.application.secrets.enrollments_google_gid)
-      map_array(enrollments, [])
+    def samples(type)
+      result = google_drive.load_spreadsheet(Rails.application.secrets["#{type}_google_id"], Rails.application.secrets["#{type}_google_gid"])
+      map_array(result, [])
     end
 
     def map_array(data, reject_fields)

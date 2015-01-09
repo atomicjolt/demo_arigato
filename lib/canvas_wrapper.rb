@@ -197,6 +197,14 @@ class CanvasWrapper
     })
   end
 
+  def create_discussion(course_id)
+    api_post_request("courses/#{course_id}/discussion_topics", {
+      recipients: recipients,
+      body: body,
+      scope: 'unread'
+    })
+  end
+
   def get_account_lti_tools(sub_account_id = nil)
     api_get_request("accounts/#{sub_account_id || account_id}/external_tools")
   end

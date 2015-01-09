@@ -66,9 +66,16 @@ class CanvasLoad < ActiveRecord::Base
   def find_or_create_sub_account(name)
     sub_accounts = canvas.sub_accounts
     if sub_account = sub_accounts.find{|sa| sa['name'] == name}
-      sub_account
+      {
+        sub_account: sub_account,
+        existing: true
+      }
     else
-      canvas.create_subaccount({account: {name: name}})
+      sub_account = canvas.create_subaccount({account: {name: name}})
+      {
+        sub_account: sub_account,
+        existing: false
+      }
     end
     rescue Canvas::ApiError => ex
       if CanvasWrapper.authorized_fail?(ex)
