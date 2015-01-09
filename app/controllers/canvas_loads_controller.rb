@@ -237,7 +237,7 @@ class CanvasLoadsController < ApplicationController
     end
 
     def map_array(data, reject_fields)
-      header = data[0].map{|v| v.downcase}
+      header = data[0].map{|v| v.present? ? v.downcase : ''}
       results = data[1..data.length].map do |d| 
         header.each_with_index.inject({}) do |result, (key, index)| 
           result[key.to_sym] = d[index] unless d[index].blank? || reject_fields.include?(key)
