@@ -89,11 +89,12 @@ class CanvasLoad < ActiveRecord::Base
       }
     end
     
+    course_params = course.parsed
+
     if existing_course
       course_params[:sis_course_id] = "#{course_params[:sis_course_id]}_#{DateTime.now}" 
     end
 
-    course_params = course.parsed
     course_params[:name] << " - #{self.suffix}" # Add suffix to course name
     begin
       # try creating the course with the sis id
