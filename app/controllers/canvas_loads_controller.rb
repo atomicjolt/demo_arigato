@@ -143,17 +143,28 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
-      # if users.present?
-      #   ['discussion', 'assignment', 'quiz', 'conversation', 'other_activity'].each do |item|
-      #     response.stream.write "Adding #{item} -------------------------------\n\n"
-      #     samples(item).each do |entry|
-      #       @canvas_load.
-      #       entry
-
-      #     end
-      #   end
-      # end
       
+      ['discussions', 'assignments', 'quizzes', 'conversations', 'other_activities'].each do |type|
+        response.stream.write "Adding #{type} -------------------------------\n\n"
+        samples(type).each do |item|
+          if course = courses[item[:sis_course_id]]
+            case type
+            when 'discussions'
+              result = @canvas_load.canvas.create_discussion(course['id'], item['title'], item['message'])
+              response.stream.write "Added #{item['title']}\n\n" if result['id']
+            when 'assignments'
+
+            when 'quizzes'
+
+            when 'conversations'
+
+            when 'other_activities'
+
+            end
+          end
+        end
+      end
+    
       # Setup LTI tools
       courses.each do |sis_course_id, course|
         if @canvas_load.lti_attendance

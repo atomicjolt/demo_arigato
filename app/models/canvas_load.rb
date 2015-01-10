@@ -236,6 +236,12 @@ class CanvasLoad < ActiveRecord::Base
     }
   end
 
+  def canvas
+    return @canvas if @canvas.present?
+    token = self.user.authentications.find_by(provider_url: self.canvas_domain).token
+    @canvas = CanvasWrapper.new(self.canvas_domain, token)
+  end
+  
   protected
     
     def add_avatar(user, params)
@@ -246,12 +252,6 @@ class CanvasLoad < ActiveRecord::Base
       canvas.create_user(params, sub_account_id)
     rescue Canvas::ApiError => ex
       nil
-    end
-
-    def canvas
-      return @canvas if @canvas.present?
-      token = self.user.authentications.find_by(provider_url: self.canvas_domain).token
-      @canvas = CanvasWrapper.new(self.canvas_domain, token)
     end
 
 end

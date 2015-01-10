@@ -197,11 +197,11 @@ class CanvasWrapper
     })
   end
 
-  def create_discussion(course_id)
+  def create_discussion(course_id, title, message)
     api_post_request("courses/#{course_id}/discussion_topics", {
-      recipients: recipients,
-      body: body,
-      scope: 'unread'
+      title: title,
+      message: message,
+      published: true,
     })
   end
 
