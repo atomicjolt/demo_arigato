@@ -52,11 +52,11 @@ class CanvasLoadsController < ApplicationController
       end
 
       if sub_account = @canvas_load.find_or_create_sub_account(subaccount_name)
+        sub_account_id = sub_account[:sub_account]['id']
         if sub_account['existing']
           response.stream.write "Found Existing Sub Account #{subaccount_name}-------------------------------\n\n"
         else
           response.stream.write "Adding Sub Account -------------------------------\n\n"
-          sub_account_id = sub_account['id']
           response.stream.write "Added sub account: #{subaccount_name}.\n\n"
         end
       else
