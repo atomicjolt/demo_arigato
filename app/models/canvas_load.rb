@@ -185,6 +185,25 @@ class CanvasLoad < ActiveRecord::Base
 
   end
 
+  def create_discussion(user_id, course_id, discussion)
+    @discussions ||= {}
+    @discussions[course_id] ||= {}
+    reply = (discussion[:reply] || 'n').downcase
+    title = discussion[:title].strip
+    if reply == 'n'
+      result = canvas.create_discussion(user_id, course_id, title, discussion[:message])
+      @discussions[course_id][title] = result
+    else
+      if topic = @discussions[course_id][title]
+        result = canvas.create_discussion_entry(user_id, course_id, topic['id'], discussion[:message]) 
+      else
+        result = canvas.create_discussion(user_id, course_id, title, discussion[:message])
+        @discussions[course_id][title] = result
+      end
+    end
+    result
+  end
+
   def ensure_enrollment(user_id, course_id, enrollment_type)
     canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: "#{enrollment_type.capitalize}Enrollment", enrollment_state: 'active' }})
   end
@@ -241,7 +260,7 @@ class CanvasLoad < ActiveRecord::Base
     token = self.user.authentications.find_by(provider_url: self.canvas_domain).token
     @canvas = CanvasWrapper.new(self.canvas_domain, token)
   end
-  
+
   protected
     
     def add_avatar(user, params)

@@ -197,12 +197,24 @@ class CanvasWrapper
     })
   end
 
-  def create_discussion(course_id, title, message)
-    api_post_request("courses/#{course_id}/discussion_topics", {
+  def create_discussion(user_id, course_id, title, message)
+    api_post_request("courses/#{course_id}/discussion_topics?as_user_id=#{user_id}", {
       title: title,
       message: message,
       published: true,
     })
+  end
+
+  def create_discussion_entry(user_id, course_id, topic_id, message)
+    api_post_request("courses/#{course_id}/discussion_topics/#{topic_id}/entries?as_user_id=#{user_id}", {
+      message: message
+    })
+  end
+
+  def create_assignments(course_id, name)
+    api_post_request("courses/#{course_id}/assignments", {  assignment: {
+      name: name
+    }})
   end
 
   def get_account_lti_tools(sub_account_id = nil)

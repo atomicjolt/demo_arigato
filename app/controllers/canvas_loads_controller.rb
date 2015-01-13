@@ -146,12 +146,23 @@ class CanvasLoadsController < ApplicationController
       
       ['discussions', 'assignments', 'quizzes', 'conversations', 'other_activities'].each do |type|
         response.stream.write "Adding #{type} -------------------------------\n\n"
-        samples(type).each do |item|
+        items = samples(type)
+        
+        case type
+        when 'discussions'
+          items = items.sort_by{|i| (i[:reply] || 'n').downcase} # Put all the 'n' records first. These should be the root posts.
+        end
+        
+        items.each do |item|
           if course = courses[item[:sis_course_id]]
             case type
             when 'discussions'
-              result = @canvas_load.canvas.create_discussion(course['id'], item['title'], item['message'])
-              response.stream.write "Added #{item['title']}\n\n" if result['id']
+              if user = users[item[:user_id]]
+                result = @canvas_load.create_discussion(user['id'], course['id'], item)
+                response.stream.write "Added #{item[:title]}\n\n" if result['id']
+              else
+                response.stream.write "Can't find user #{item[:user_id]}\n\n"
+              end
             when 'assignments'
 
             when 'quizzes'
@@ -166,22 +177,24 @@ class CanvasLoadsController < ApplicationController
       end
     
       # Setup LTI tools
-      courses.each do |sis_course_id, course|
-        if @canvas_load.lti_attendance
-          params = @canvas_load.lti_tool_params(
-            Rails.application.secrets.lti_attendance_key, 
-            Rails.application.secrets.lti_attendance_secret, 
-            'https://rollcall.instructure.com/configure.xml')
-          tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
-          response.stream.write "Added Attendance LTI tool to #{course['course_code']}\n\n"
-        end
-        if @canvas_load.lti_chat
-          params = @canvas_load.lti_tool_params(
-            Rails.application.secrets.lti_chat_key,
-            Rails.application.secrets.lti_chat_secret, 
-            'https://chat.instructure.com/lti/configure.xml')
-          tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
-          response.stream.write "Added Chat LTI tool to #{course['course_code']}\n\n"
+      if sub_account_id
+        courses.each do |sis_course_id, course|
+          if @canvas_load.lti_attendance
+            params = @canvas_load.lti_tool_params(
+              Rails.application.secrets.lti_attendance_key, 
+              Rails.application.secrets.lti_attendance_secret, 
+              'https://rollcall.instructure.com/configure.xml')
+            tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
+            response.stream.write "Added Attendance LTI tool to #{course['course_code']}\n\n"
+          end
+          if @canvas_load.lti_chat
+            params = @canvas_load.lti_tool_params(
+              Rails.application.secrets.lti_chat_key,
+              Rails.application.secrets.lti_chat_secret, 
+              'https://chat.instructure.com/lti/configure.xml')
+            tool = @canvas_load.add_lti_tool(params, course['id'], sub_account_id)
+            response.stream.write "Added Chat LTI tool to #{course['course_code']}\n\n"
+          end
         end
       end
 
