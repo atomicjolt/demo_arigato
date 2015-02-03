@@ -8,7 +8,7 @@ class Course < ActiveRecord::Base
   end
 
   def method_missing(meth, *args, &block)
-    if meth != :content= && parsed[meth]
+    if meth != :content= && parsed.has_key?(meth)
       parsed[meth]
     else
       super
