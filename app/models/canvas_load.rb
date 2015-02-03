@@ -26,7 +26,7 @@ class CanvasLoad < ActiveRecord::Base
 
   def setup_welcome(sub_account_id = nil)
     # Check to see if Welcome course exists already
-    if welcome_course = search_courses(sub_account_id, welcome_to_canvas_name).find{|c| c['name'] == welcome_to_canvas_name}
+    if welcome_course = search_courses(sub_account_id, welcome_to_canvas_name).find{|c| c['name'].include?(welcome_to_canvas_name)}
       false
     else
       self.courses.create!(content: {
