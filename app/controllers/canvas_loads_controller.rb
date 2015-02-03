@@ -142,39 +142,6 @@ class CanvasLoadsController < ApplicationController
           end
         end
       end
-
-      
-      ['discussions', 'assignments', 'quizzes', 'conversations', 'other_activities'].each do |type|
-        response.stream.write "Adding #{type} -------------------------------\n\n"
-        items = samples(type)
-        
-        case type
-        when 'discussions'
-          items = items.sort_by{|i| (i[:reply] || 'n').downcase} # Put all the 'n' records first. These should be the root posts.
-        end
-        
-        items.each do |item|
-          if course = courses[item[:sis_course_id]]
-            case type
-            when 'discussions'
-              if user = users[item[:user_id]]
-                result = @canvas_load.create_discussion(user['id'], course['id'], item)
-                response.stream.write "Added #{item[:title]}\n\n" if result['id']
-              else
-                response.stream.write "Can't find user #{item[:user_id]}\n\n"
-              end
-            when 'assignments'
-
-            when 'quizzes'
-
-            when 'conversations'
-
-            when 'other_activities'
-
-            end
-          end
-        end
-      end
     
       # Setup LTI tools
       if sub_account_id
@@ -222,6 +189,43 @@ class CanvasLoadsController < ApplicationController
           end
         end
         sleep(3)
+      end
+
+      ['discussions', 'assignments', 'quizzes', 'conversations'].each do |type|
+        response.stream.write "Adding #{type} -------------------------------\n\n"
+        items = samples(type)
+        
+        case type
+        when 'discussions'
+          items = items.sort_by{|i| (i[:reply] || 'n').downcase} # Put all the 'n' records first. These should be the root posts.
+        end
+        
+        items.each do |item|
+          if course = courses[item[:sis_course_id]]
+            case type
+            when 'discussions'
+              if user = users[item[:user_id]]
+                result = @canvas_load.create_discussion(user['id'], course['id'], item)
+                response.stream.write "Added #{item[:title]}\n\n" if result['id']
+              else
+                response.stream.write "Can't find user #{item[:user_id]}\n\n"
+              end
+            when 'assignments'
+              result = @canvas_load.create_assignment_submission(course['id'], item)
+              debugger
+              response.stream.write "Added #{item[:name]}\n\n" if result['id']
+            when 'quizzes'
+              #result = @canvas_load.create_quiz(course['id'], item)
+            
+            when 'conversations'
+              if user = users[item[:user_id]]
+                result = @canvas_load.create_conversation(user['id'], course['id'], item)
+                response.stream.write "Added #{item[:subject]}\n\n" if result['id']
+              end
+
+            end
+          end
+        end
       end
 
     rescue IOError => ex # Raised when browser interrupts the connection
