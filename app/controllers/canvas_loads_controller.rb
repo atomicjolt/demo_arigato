@@ -18,7 +18,7 @@ class CanvasLoadsController < ApplicationController
 
   def create
     @canvas_load = current_user.canvas_loads.build(canvas_load_params)
-    @canvas_load.canvas_domain = current_user.authentications.find_by_provider('canvas').provider_url
+    @canvas_load.canvas_domain = current_user.authentications.find_by(provider: 'canvas').provider_url
     if @canvas_load.save    
       render :create
     else
