@@ -93,8 +93,9 @@ class CanvasLoadsController < ApplicationController
       migrations = {}
       @canvas_load.courses.each do |course|
         result = @canvas_load.find_or_create_course(course, sub_account_id, always_create_courses)
-        courses[course.sis_course_id] = result[:course]
-        migrations[course.sis_course_id] = result[:migration] if result[:migration]
+        sis_id = course.sis_course_id || 'welcome' # The welcome course returns a null sis id.
+        courses[sis_id] = result[:course]
+        migrations[sis_id] = result[:migration] if result[:migration]
         if result[:existing]
           response.stream.write "#{course.name} already exists.\n\n"
         else
