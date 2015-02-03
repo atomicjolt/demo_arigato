@@ -201,20 +201,58 @@ class CanvasWrapper
     api_post_request("courses/#{course_id}/discussion_topics?as_user_id=#{user_id}", {
       title: title,
       message: message,
-      published: true,
+      published: true
     })
   end
 
   def create_discussion_entry(user_id, course_id, topic_id, message)
     api_post_request("courses/#{course_id}/discussion_topics/#{topic_id}/entries?as_user_id=#{user_id}", {
-      message: message
+      message: message,
+      published: true
     })
   end
 
-  def create_assignments(course_id, name)
-    api_post_request("courses/#{course_id}/assignments", {  assignment: {
-      name: name
-    }})
+  def get_discussion_entries(course_id, topic_id)
+    api_get_request("courses/#{course_id}/discussion_topics/#{topic_id}/entries")
+  end
+
+  def create_discussion_reply(user_id, course_id, topic_id, entry_id, message)
+    api_post_request("courses/#{course_id}/discussion_topics/#{topic_id}/entries/#{entry_id}/replies?as_user_id=#{user_id}", {
+      message: message,
+      published: true
+    })
+  end
+
+  def get_assignments(course_id)
+    api_get_request("courses/#{course_id}/assignments")
+  end
+
+  def create_assignment_submission(course_id, assignment_id, comment, submission_type, body = nil, url = nil)
+    request = {
+      comment: comment,
+      assignment: {
+        submission_type: submission_type
+      }
+    }
+    request[:assignment][:body] = body if body.present?
+    request[:assignment][:url] = url if url.present?
+    
+    api_post_request("courses/#{course_id}/assignments/#{assignment_id}", request)
+  end
+
+  def create_quiz(user_id, course_id, title, quiz_type)
+    api_post_request("courses/#{course_id}/quizzes", {
+      title: title,
+      quiz_type: quiz_type,
+      published: true,
+    })
+  end
+
+  def create_conversation(user_id, course_id, subject, body)
+    api_post_request("courses/#{course_id}/quizzes", {
+      subject: subject,
+      body: body
+    })
   end
 
   def get_account_lti_tools(sub_account_id = nil)

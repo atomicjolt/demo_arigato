@@ -204,6 +204,34 @@ class CanvasLoad < ActiveRecord::Base
     result
   end
 
+  def create_assignment_submission(course_id, assignment)
+    @assignments ||= {}
+    @assignments[course_id] ||= canvas.get_assignments(course_id)
+    found = @assignments[course_id].find{|a| a['name'] == assignment[:name]}
+    if assignment[:type].strip == "text"
+      body = assignment[:submission]
+    else
+      url = assignment[:submission]
+    end
+    canvas.create_assignment_submission(
+      course_id, 
+      assignment['id'], 
+      assignment[:comment], 
+      assignment[:submission_type], 
+      body,
+      url
+    )
+  end
+
+  def create_quiz(course_id, quiz)
+    canvas.create_quiz(course_id, quiz[:title].strip, quiz[:quiz_type])
+  end
+
+  def create_conversation(user_id, course_id, conversation)
+    recipient_ids = conversation[:recipient_id].split(',')
+    canvas.create_conversation(user_id, course_id, recipient_ids, conversation[:subject], conversation[:body])
+  end
+
   def ensure_enrollment(user_id, course_id, enrollment_type)
     canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: "#{enrollment_type.capitalize}Enrollment", enrollment_state: 'active' }})
   end
