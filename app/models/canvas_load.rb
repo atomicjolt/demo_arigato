@@ -195,7 +195,7 @@ class CanvasLoad < ActiveRecord::Base
       @discussions[course_id][title] = result
     else
       if topic = @discussions[course_id][title]
-        result = canvas.create_discussion_entry(user_id, course_id, topic['id'], discussion[:message]) 
+        result = canvas.create_discussion_entry(user_id, course_id, topic['id'], discussion[:message])
       else
         result = canvas.create_discussion(user_id, course_id, title, discussion[:message])
         @discussions[course_id][title] = result
