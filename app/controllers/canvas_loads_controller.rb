@@ -213,7 +213,6 @@ class CanvasLoadsController < ApplicationController
               end
             when 'assignments'
               result = @canvas_load.create_assignment_submission(course['id'], item)
-              debugger
               response.stream.write "Added #{item[:name]}\n\n" if result['id']
             when 'quizzes'
               #result = @canvas_load.create_quiz(course['id'], item)
