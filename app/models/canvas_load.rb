@@ -239,6 +239,34 @@ class CanvasLoad < ActiveRecord::Base
     canvas.enroll_user(course_id, { enrollment: { user_id: user_id, type: "#{enrollment_type.capitalize}Enrollment", enrollment_state: 'active' }})
   end
 
+  def view_pages(user_id, course_id)
+    pages = []
+    viewed_pages = []
+    try_pages { viewed_pages << canvas.get_front_page(user_id, course_id) }
+    try_pages { pages = canvas.get_pages(user_id, course_id) }
+    pages.each do |page|
+      try_pages { viewed_pages << canvas.get_page(user_id, course_id, page['url']) }
+    end
+    viewed_pages
+  end
+
+  def ignorable_errors
+    [
+      "404 No front page has been set",
+      "404 That page has been disabled for this course"
+    ]
+  end
+
+  def try_pages
+    begin
+      yield
+    rescue Canvas::ApiError => ex
+      if !ignorable_errors.include?(ex.message)
+        raise ex
+      end
+    end
+  end
+
   def check_progress(migration)
     progress_id = migration['progress_url'].split('/').last
     canvas.get_progress(progress_id)

@@ -228,6 +228,18 @@ class CanvasLoadsController < ApplicationController
         end
       end
 
+      if users.present?
+        response.stream.write "Started viewing pages.\n\n"
+        courses.each do |sis_course_id, course|
+          users.each do |email, user|
+            response.stream.write "#{user['name']} is viewing pages in #{course['course_code']}.\n\n"
+            viewed_pages = @canvas_load.view_pages(user['id'], course['id'])
+            response.stream.write "#{viewed_pages.length} pages were viewed.\n\n"
+          end
+        end
+        response.stream.write "Done viewing pages.\n\n"
+      end
+
     rescue IOError => ex # Raised when browser interrupts the connection
       response.stream.write "Error: #{ex}\n\n"
     rescue Canvas::ApiError => ex

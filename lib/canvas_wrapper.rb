@@ -255,6 +255,18 @@ class CanvasWrapper
     })
   end
 
+  def get_front_page(user_id, course_id)
+    api_get_request("courses/#{course_id}/front_page?as_user_id=#{user_id}")
+  end
+
+  def get_pages(user_id, course_id)
+    api_get_request("courses/#{course_id}/pages?as_user_id=#{user_id}")
+  end
+
+  def get_page(user_id, course_id, url)
+    api_get_request("courses/#{course_id}/pages/#{url}?as_user_id=#{user_id}")
+  end
+
   def get_account_lti_tools(sub_account_id = nil)
     api_get_request("accounts/#{sub_account_id || account_id}/external_tools")
   end
