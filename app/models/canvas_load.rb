@@ -102,7 +102,10 @@ class CanvasLoad < ActiveRecord::Base
       course_params[:sis_course_id] = "#{course_params[:sis_course_id]}_#{DateTime.now}" 
     end
 
-    course_params[:name] << " - #{self.suffix}" # Add suffix to course name
+    if course_params[:name] != welcome_to_canvas_name
+      course_params[:name] << " - #{self.suffix}" # Add suffix to course name
+    end
+
     begin
       # try creating the course with the sis id
       canvas_course = canvas.create_course({course: course_params}, sub_account_id)
