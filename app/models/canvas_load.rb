@@ -126,6 +126,10 @@ class CanvasLoad < ActiveRecord::Base
       migration_type: 'common_cartridge_importer',
       settings: {
         file_url: course.cartridge
+      },
+      date_shift_options: {
+        shift_dates: true,
+        new_start_date: DateTime.now
       }
     })
     # Publish the course
