@@ -41,7 +41,8 @@ class CanvasLoadsController < ApplicationController
     always_create_courses = true
 
     begin
-      response.stream.write "Starting setup. This will take a few moments...\n\n"
+      response.stream.write "Starting setup...\n\n"
+      response.stream.write "Go get yourself a tasty beverage. This will take a while...\n\n"
       if @canvas_load.sis_id.present?
         response.stream.write "Checking sisID...\n\n"
         if valid_teacher = @canvas_load.check_sis_id
