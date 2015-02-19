@@ -34,6 +34,7 @@ class CanvasLoadsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     sub_account_id = nil
     valid_teacher = false
+    enrollments = {}
 
     # For now just set this to false. Later if we want to add an option to the UI we can allow
     # users to be enrolled in existing courses not just the courses that were added in this iteration.
@@ -119,12 +120,12 @@ class CanvasLoadsController < ApplicationController
         samples('enrollments').each do |enrollment|
 
           if user = users[enrollment[:email]]
-             
-            course = courses[enrollment[:sis_course_id]]
+            sis_course_id = enrollment[:sis_course_id]
+            course = courses[sis_course_id]
 
             if !course && enroll_in_existing_courses
-              if course = @canvas_load.find_course_by_course_code(sub_account_id, enrollment[:sis_course_id])
-                courses[enrollment[:sis_course_id]] = course
+              if course = @canvas_load.find_course_by_course_code(sub_account_id, sis_course_id)
+                courses[sis_course_id] = course
               end
             end
 
@@ -133,16 +134,18 @@ class CanvasLoadsController < ApplicationController
               begin
                 @canvas_load.ensure_enrollment(user['id'], course['id'], enrollment[:type])
                 response.stream.write "Enrolled #{enrollment[:name]} (#{enrollment[:email]}) in #{course_code}\n\n"
+                enrollments[sis_course_id] ||= []
+                enrollments[sis_course_id] << user
               rescue Canvas::ApiError => ex
                 response.stream.write "Error #{enrollment[:name]} (#{enrollment[:email]}) in #{course_code}: #{ex}\n\n"
               end
             else
               if enroll_in_existing_courses
-                response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{enrollment[:sis_course_id]} not available.\n\n"
+                response.stream.write "Could not enroll #{enrollment[:name]} (#{enrollment[:email]}). #{sis_course_id} not available.\n\n"
               end
             end
           else
-            response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{enrollment[:sis_course_id]}\n\n"
+            response.stream.write "Could not find #{enrollment[:name]} (#{enrollment[:email]}) to enroll in #{sis_course_id}\n\n"
           end
         end
       end
@@ -234,7 +237,7 @@ class CanvasLoadsController < ApplicationController
       if users.present?
         response.stream.write "Started viewing pages.\n\n"
         courses.each do |sis_course_id, course|
-          users.each do |email, user|
+          enrollments[sis_course_id].each do |user|
             response.stream.write "#{user['name']} is viewing pages in #{course['course_code']}.\n\n"
             viewed_pages = @canvas_load.view_pages(user['id'], course['id'])
             response.stream.write "#{viewed_pages.length} pages were viewed.\n\n"
