@@ -189,7 +189,7 @@ class CanvasLoadsController < ApplicationController
             end
           end
         end
-        sleep(3)
+        sleep(5)
       end
 
       ['discussions', 'assignments', 'quizzes', 'conversations'].each do |type|
