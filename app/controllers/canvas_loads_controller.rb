@@ -219,8 +219,14 @@ class CanvasLoadsController < ApplicationController
                 response.stream.write "Can't find user #{item[:user_id]}\n\n"
               end
             when 'assignments'
-              result = @canvas_load.create_assignment_submission(course['id'], item)
-              response.stream.write "Added #{item[:name]}\n\n" if result['id']
+              if user = users[item[:user_id]]
+                result = @canvas_load.create_assignment_submission(user['id'], course['id'], item)
+                if result['id']
+                  response.stream.write "Added #{item[:name]}\n\n"
+                else
+                  response.stream.write "Failed to submit assignment #{item[:name]}\n\n"
+                end
+              end
             when 'quizzes'
               #result = @canvas_load.create_quiz(course['id'], item)
             

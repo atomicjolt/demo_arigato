@@ -240,7 +240,7 @@ class CanvasWrapper
     api_get_request("courses/#{course_id}/assignments")
   end
 
-  def create_assignment_submission(course_id, assignment_id, comment, submission_type, body = nil, url = nil)
+  def create_assignment_submission(user_id, course_id, assignment_id, comment, submission_type, body = nil, url = nil)
     request = {
       comment: comment,
       assignment: {
@@ -249,8 +249,8 @@ class CanvasWrapper
     }
     request[:assignment][:body] = body if body.present?
     request[:assignment][:url] = url if url.present?
-    
-    api_post_request("courses/#{course_id}/assignments/#{assignment_id}", request)
+
+    api_post_request("courses/#{course_id}/assignments/#{assignment_id}/submissions?as_user_id=#{user_id}", request)
   end
 
   def create_quiz(user_id, course_id, title, quiz_type)

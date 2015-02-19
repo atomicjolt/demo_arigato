@@ -207,7 +207,7 @@ class CanvasLoad < ActiveRecord::Base
     result
   end
 
-  def create_assignment_submission(course_id, assignment)
+  def create_assignment_submission(user_id, course_id, assignment)
     @assignments ||= {}
     @assignments[course_id] ||= canvas.get_assignments(course_id)
     found = @assignments[course_id].find{|a| a['name'] == assignment[:name]}
@@ -217,6 +217,7 @@ class CanvasLoad < ActiveRecord::Base
       url = assignment[:submission]
     end
     canvas.create_assignment_submission(
+      user_id,
       course_id, 
       assignment['id'], 
       assignment[:comment], 
@@ -224,6 +225,9 @@ class CanvasLoad < ActiveRecord::Base
       body,
       url
     )
+  rescue Canvas::ApiError => ex
+    # Failed to create submission
+    return {}
   end
 
   def create_quiz(course_id, quiz)
