@@ -13,6 +13,8 @@ class CanvasLoadsController < ApplicationController
   end
 
   def new
+    auth = current_user.authentications.find_by(provider: 'canvas')
+    @is_instructure_admin = CanvasWrapper.is_instructure_admin(auth.token)
     @canvas_load = CanvasLoad.new(courses: sample_courses)
   end
 

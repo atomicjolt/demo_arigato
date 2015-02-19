@@ -55,6 +55,19 @@ class CanvasWrapper
     HTTParty.put(full_url_with_domain(api_url), :headers => headers, :body => payload)
   end
 
+  # This method is used to determine if a user is an Instructure admin with special super powers.
+  def self.is_instructure_admin(token)
+    api = Canvas::API.new(host: "https://siteadmin.instructure.com", token: token)
+    result = api.get('/api/v1/users/self/profile')
+    true
+  rescue Canvas::ApiError => ex
+    if self.invalid_token_error?(ex)
+      false
+    else
+      raise ex
+    end
+  end
+
   def current_account
     api_get_request("accounts/self")
   end
@@ -294,6 +307,11 @@ class CanvasWrapper
   def self.server_error?(ex)
     ex.message == "[{\"message\"=>\"An error occurred.\", \"error_code\"=>\"internal_server_error\"}]"
   end
+
+  def self.invalid_token_error?(ex)
+    ex.message == "[{\"message\"=>\"Invalid access token.\"}]"
+  end
+
 
   def self.sis_taken_error?(ex)
     ex.message.include?("sis_source_id") && ex.message.include?("is already in use")

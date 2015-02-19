@@ -7,33 +7,35 @@
 
   <form class="form-horizontal" role="form">
 
-    <h3 class="text-info">What LTI tools do you need?</h3>
-    <p class="text-muted">LTI tools will <em>not</em> be created if they already exist in this Account.</p>
+    <% if @is_instructure_admin -%>
+      <h3 class="text-info">What LTI tools do you need?</h3>
+      <p class="text-muted">LTI tools will <em>not</em> be created if they already exist in this Account.</p>
 
-    <div class="row">
-      <div class="col-sm-3">
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-12">
-          <div class="checkbox">
-            <%= f.check_box :lti_attendance, {checked: true} %>
-            <%= f.label :lti_attendance, "Roll Call Attendance" %>
+      <div class="row">
+        <div class="col-sm-3">
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-12">
+            <div class="checkbox">
+              <%= f.check_box :lti_attendance, {checked: true} %>
+              <%= f.label :lti_attendance, "Roll Call Attendance" %>
+            </div>
           </div>
         </div>
-      </div>
-      </div>
-      <div class="col-sm-3">
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-12">
-          <div class="checkbox">
-          <%= f.check_box :lti_chat, {checked: true} %>
-          <%= f.label :lti_chat, "Canvas Chat" %>
+        </div>
+        <div class="col-sm-3">
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-12">
+            <div class="checkbox">
+            <%= f.check_box :lti_chat, {checked: true} %>
+            <%= f.label :lti_chat, "Canvas Chat" %>
+            </div>
           </div>
         </div>
+        </div>
       </div>
-      </div>
-    </div>
-  
-    <hr>
+    
+      <hr>
+    <% end -%>
 
     <h3 class="text-info">Do you want to make demo courses for a specific human?</h3>
     <div class="row">
