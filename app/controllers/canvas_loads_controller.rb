@@ -35,6 +35,7 @@ class CanvasLoadsController < ApplicationController
     sub_account_id = nil
     valid_teacher = false
     enrollments = {}
+    course_urls = {}
 
     # For now just set this to false. Later if we want to add an option to the UI we can allow
     # users to be enrolled in existing courses not just the courses that were added in this iteration.
@@ -186,7 +187,7 @@ class CanvasLoadsController < ApplicationController
             when 'completed'
               completed_courses[sis_course_id] = true
               response.stream.write "#{course_code} is ready\n\n"
-              response.stream.write %Q{Course url: #{@canvas_load.canvas_domain}/courses/#{courses[sis_course_id]['id']}\n\n}
+              course_urls[course_code] = "#{@canvas_load.canvas_domain}/courses/#{courses[sis_course_id]['id']}"
             when 'failed'
               completed_courses[sis_course_id] = true
               response.stream.write "Failed to add content to #{course_code}.\n\n"
@@ -252,6 +253,10 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Canvas Error: #{ex}\n\n"
     ensure
       response.stream.write "Finished!\n\n"
+      response.stream.write "Course urls:\n\n"
+      course_urls.each do |course_code, url|
+        response.stream.write "#{course_code}: #{url}\n\n"
+      end
       response.stream.close # Prevents stream from being open forever
     end
   end
