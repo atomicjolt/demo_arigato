@@ -193,20 +193,17 @@ class CanvasLoad < ActiveRecord::Base
   end
 
   def create_discussion(user_id, course_id, discussion)
+
     @discussions ||= {}
-    @discussions[course_id] ||= {}
-    reply = (discussion[:reply] || 'n').downcase
+    @discussions[course_id] ||= canvas.discussion_topics(course_id)
+
     title = discussion[:title].strip
-    if reply == 'n'
+
+    if existing_discussion = @discussions[course_id].find{ |dt| dt['title'].strip.downcase == title.downcase }
+      result = canvas.create_discussion_entry(user_id, course_id, existing_discussion['id'], discussion[:message])
+    else
       result = canvas.create_discussion(user_id, course_id, title, discussion[:message])
       @discussions[course_id][title] = result
-    else
-      if topic = @discussions[course_id][title]
-        result = canvas.create_discussion_entry(user_id, course_id, topic['id'], discussion[:message])
-      else
-        result = canvas.create_discussion(user_id, course_id, title, discussion[:message])
-        @discussions[course_id][title] = result
-      end
     end
     result
   end
