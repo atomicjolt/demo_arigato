@@ -211,24 +211,31 @@ class CanvasLoad < ActiveRecord::Base
   def create_assignment_submission(user_id, course_id, assignment)
     @assignments ||= {}
     @assignments[course_id] ||= canvas.get_assignments(course_id)
-    found = @assignments[course_id].find{|a| a['name'] == assignment[:name]}
-    if assignment[:type].strip == "text"
-      body = assignment[:submission]
+    
+    # Find the assignment we are submitting to.
+    if found = @assignments[course_id].find{|a| a['name'].strip.downcase == assignment[:name].strip.downcase}
+
+      if assignment[:type].strip == "online_text_entry"
+        body = assignment[:submission].strip
+      else
+        url = assignment[:submission].strip
+      end
+      canvas.create_assignment_submission(
+        user_id,
+        course_id, 
+        found['id'], 
+        assignment[:comment], 
+        assignment[:type].strip, 
+        body,
+        url
+      )
     else
-      url = assignment[:submission]
+      # Failed to create submission because the assignment couldn't be found
+      { error: "Assignment #{assignment[:name]} couldn't be found." }
     end
-    canvas.create_assignment_submission(
-      user_id,
-      course_id, 
-      assignment['id'], 
-      assignment[:comment], 
-      assignment[:submission_type], 
-      body,
-      url
-    )
   rescue Canvas::ApiError => ex
     # Failed to create submission
-    return {}
+    { error: "Couldn't submit assignment #{assignment[:name]}. Error: #{ex}" }
   end
 
   def create_quiz(course_id, quiz)

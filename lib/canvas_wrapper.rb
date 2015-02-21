@@ -242,13 +242,15 @@ class CanvasWrapper
 
   def create_assignment_submission(user_id, course_id, assignment_id, comment, submission_type, body = nil, url = nil)
     request = {
-      comment: comment,
-      assignment: {
+      comment: {
+        text_comment: comment
+      },
+      submission: {
         submission_type: submission_type
       }
     }
-    request[:assignment][:body] = body if body.present?
-    request[:assignment][:url] = url if url.present?
+    request[:submission][:body] = body if body.present?
+    request[:submission][:url] = url if url.present?
 
     api_post_request("courses/#{course_id}/assignments/#{assignment_id}/submissions?as_user_id=#{user_id}", request)
   end

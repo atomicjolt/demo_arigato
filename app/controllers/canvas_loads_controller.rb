@@ -224,7 +224,7 @@ class CanvasLoadsController < ApplicationController
                 if result['id']
                   response.stream.write "Added #{item[:name]}\n\n"
                 else
-                  response.stream.write "Failed to submit assignment #{item[:name]}\n\n"
+                  response.stream.write "#{result[:error]}\n\n"
                 end
               end
             when 'quizzes'
