@@ -88,6 +88,8 @@ class CanvasLoadsController < ApplicationController
           else
             response.stream.write "Added user: #{user[:name]}.\n\n"
           end
+        elsif result[:error]
+          response.stream.write "Error adding #{user[:name]}: #{result[:error]}\n\n"
         else
           response.stream.write "Couldn't find or add #{user[:name]}\n\n"
         end
@@ -297,7 +299,9 @@ class CanvasLoadsController < ApplicationController
       header = data[0].map{|v| v.present? ? v.downcase : ''}
       results = data[1..data.length].map do |d| 
         header.each_with_index.inject({}) do |result, (key, index)| 
-          result[key.to_sym] = d[index] unless d[index].blank? || reject_fields.include?(key)
+          if val = d[index]
+            result[key.to_sym] = val.strip unless reject_fields.include?(key)
+          end
           result
         end
       end
