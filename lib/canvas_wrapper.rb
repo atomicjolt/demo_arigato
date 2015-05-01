@@ -19,7 +19,11 @@ class CanvasWrapper
     rescue Canvas::ApiError => ex
       if CanvasWrapper.authorized_fail?(ex)
         accounts = api_get_request("course_accounts")
-        self.account_id = accounts.first['id']
+        if accounts.length > 0
+          self.account_id = accounts.first['id']
+        else
+          raise "Your user account doesn't have access to any accounts for course creation"
+        end
       else
         raise ex
       end
@@ -240,7 +244,8 @@ class CanvasWrapper
     api_get_request("courses/#{course_id}/assignments")
   end
 
-  def create_assignment_submission(user_id, course_id, assignment_id, comment, submission_type, body = nil, url = nil)
+  def create_assignment_submission(user_id, course_id, assignment_id, name, comment, submission_type, body = nil, url = nil)
+
     request = {
       comment: {
         text_comment: comment
@@ -249,10 +254,27 @@ class CanvasWrapper
         submission_type: submission_type
       }
     }
-    request[:submission][:body] = body if body.present?
-    request[:submission][:url] = url if url.present?
+
+    if submission_type == 'online_upload'
+      name = name.gsub!(/[^0-9A-Za-z.\-]/, '_')
+      result = @canvas_api.upload_file_from_url("/api/v1/users/self/files", :size => 10000, :name => name, :url => url)
+      request[:submission][:file_ids] = [result['id']]
+    elsif submission_type == 'online_text_entry'
+      raise "A submission type of online_text_entry requires a body entry" if body.blank?
+      request[:submission][:body] = body
+    elsif submission_type == 'online_url'
+      raise "A submission type of online_url requires a url entry" if url.blank?
+      request[:submission][:url] = url
+    else
+      raise "Assignment submission #{name} provided an unknown submission type of #{submission_type}"
+    end
 
     api_post_request("courses/#{course_id}/assignments/#{assignment_id}/submissions?as_user_id=#{user_id}", request)
+  # rescue Canvas::ApiError => ex
+  #   api_url = "courses/#{course_id}/assignments/#{assignment_id}/submissions?as_user_id=#{user_id}"
+  #   result = HTTParty.post(full_url_with_domain(api_url), :headers => headers, :body => request)
+
+  #   debugger
   end
 
   def create_quiz(user_id, course_id, title, quiz_type)
