@@ -304,7 +304,7 @@ class CanvasLoad < ActiveRecord::Base
     if sub_account_id
       canvas.create_account_lti_tool(params, sub_account_id)
     else
-      canvas.create_account_lti_tool(params, course_id)
+      canvas.create_course_lti_tool(params, course_id)
     end
   end
 
