@@ -182,7 +182,6 @@ class CanvasLoad < ActiveRecord::Base
     }
 
   rescue Canvas::ApiError => ex
-    debugger
     return {
       error: ex    
     }
@@ -211,6 +210,10 @@ class CanvasLoad < ActiveRecord::Base
     # Find the assignment we are submitting to.
     if found = @assignments[course_id].find{|a| a['name'].strip.downcase == assignment[:name].strip.downcase}
 
+      if assignment[:type].blank?
+        raise "Assignment submission type cannot be empty. #{assignment[:name]}"
+      end
+
       if assignment[:type].strip == "online_text_entry"
         body = assignment[:submission].strip
       else
@@ -219,7 +222,8 @@ class CanvasLoad < ActiveRecord::Base
       canvas.create_assignment_submission(
         user_id,
         course_id, 
-        found['id'], 
+        found['id'],
+        assignment[:name], 
         assignment[:comment], 
         assignment[:type].strip, 
         body,
@@ -231,7 +235,7 @@ class CanvasLoad < ActiveRecord::Base
     end
   rescue Canvas::ApiError => ex
     # Failed to create submission
-    { error: "Couldn't submit assignment #{assignment[:name]}. Error: #{ex}" }
+    { error: "Couldn't submit assignment #{assignment[:name]}, type: #{assignment[:type]}. Error: #{ex}" }
   end
 
   def create_quiz(course_id, quiz)
