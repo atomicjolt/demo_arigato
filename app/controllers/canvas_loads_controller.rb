@@ -259,6 +259,9 @@ class CanvasLoadsController < ApplicationController
       response.stream.write "Error: #{ex}\n\n"
     rescue Canvas::ApiError => ex
       response.stream.write "Canvas Error: #{ex}\n\n"
+    rescue => ex
+      response.stream.write "Error: #{ex}\n\n"
+      raise ex
     ensure
       response.stream.write "Finished!\n\n"
       response.stream.write "Course urls:\n\n"
