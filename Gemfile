@@ -1,8 +1,11 @@
+# If bundler starts to act up run these commands to start over and clean up:
+# rm -rf ~/.bundle/ ~/.gem/; rm -rf $GEM_HOME/bundler/ $GEM_HOME/cache/bundler/; rm -rf .bundle/; rm -rf vendor/cache/; rm -rf Gemfile.lock
+# rvm gemset empty demoarigato
+# bundle install
+
 source 'https://rubygems.org'
 
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-ruby '2.1.5'
 gem 'rails', '4.1.7'
 
 # Database
