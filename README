@@ -2,6 +2,8 @@ Demo Arigato
 =========
 This project makes it simple to populate a sample Canvas course using values from Google Drive Spreadsheets.
 
+Course information is populate from this Google Spreadsheet:
+https://docs.google.com/spreadsheets/edit?id=1AhfPEZc0r7j6vA3tZNkf3GGrwcNre_RFAG3Db2WO2kk#gid=1742888096
 
 Deployment
 -----------
